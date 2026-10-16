@@ -32,3 +32,17 @@ arbitrary hosted-cloud control is promised. POSIX only.
 
 Automated tests and source review reduce risk but are not proof of security.
 No third-party security certification is claimed.
+
+
+## Plugin lifecycle and state
+
+Version 0.2.0 packages a skill and a foreground CLI, with no autostart hooks or
+daemon. Monitoring requires an explicit request. Cooperative stop is scoped to
+the selected private state directory; observing the monitor's exit is still
+required. Stop requests do not signal research processes or establish cloud-task
+termination. Keep writable state outside the plugin cache and repository.
+
+Read quota only through the existing official app-server route. Never parse
+credentials or session logs directly, change CODEX_HOME, or relax permissions
+and security settings to bypass a startup failure. Use normal host approval for
+a legitimate operation when needed, and honor denial.

@@ -62,6 +62,22 @@ class State:
         self.data['decision'] = decision
         self.write('state.json', self.data)
 
+    def request_stop(self):
+        """Cooperative request bound to this exact monitor, never signal a PID."""
+        try:
+            fcntl.flock(self.lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            token = self.data.get('monitor_token')
+            if not isinstance(token, str) or not token:
+                return False
+            self.write('stop.json', {'monitor_token': token})
+            return True
+        return False
+
+    def stop_requested(self, token):
+        request = self.read('stop.json')
+        return request is not None and request.get('monitor_token') == token
+
     def close(self):
         self.lock.close()
 

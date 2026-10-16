@@ -1,0 +1,25 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "codex-quota-guard",
+  "version": "0.2.0",
+  "description": "Read Codex quota and run opt-in advisory monitoring with fail-closed checks.",
+  "author": {
+    "name": "knight-bo"
+  },
+  "repository": "https://github.com/knight-bo/codex-quota-guard",
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Codex Quota Guard",
+        "shortDescription": "Check quota and explicitly start conservative polling.",
+        "developerName": "knight-bo",
+        "category": "Developer Tools",
+        "defaultPrompt": [
+          "查看 Codex 剩余额度。",
+          "Start quota monitoring with a 10% reserve and 2-point buffer."
+        ]
+      }
+    }
+  }
+}

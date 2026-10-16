@@ -83,5 +83,12 @@ class Guard:
             reason = 'low_quota'
         return {'allow_new_work': reason is None, 'reason': reason or 'healthy',
                 'remaining_percent': remaining, 'observed_at': self.received,
+                'data_valid': reason in (None, 'low_quota'),
+                'stale': self.received is not None and (now < self.received or now-self.received >= self.policy.max_age or any(w['reset'] <= now for w in self.windows.values())),
+                'reported_at': now, 'bucket': self.policy.bucket,
+                'reserve_percent': self.policy.threshold, 'buffer_percent': self.policy.buffer,
+                'windows': {name: {'remaining_percent': 100-w['used'],
+                    'window_duration_mins': w['duration'], 'resets_at': w['reset']}
+                    for name, w in self.windows.items()},
                 'valid_until': min([self.received+self.policy.max_age] +
-                    [w['reset'] for w in self.windows.values()]) if self.received else None}
+                    [w['reset'] for w in self.windows.values()]) if self.received is not None else None}

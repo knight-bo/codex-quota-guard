@@ -55,3 +55,29 @@ The checkpoint feature is explicitly request-only. This package has no ACK
 consumer and cannot verify durable application saves. Every managed-action
 report includes checkpoint_status=unconfirmed, including interrupt_acknowledged.
 Never interpret transport acknowledgement as checkpoint success.
+
+
+## Version 0.2.0 plugin and lifecycle
+
+The bundled skill resolves scripts/quota_guard.py relative to its own installed
+location. The launcher imports the same core without pip or host configuration
+changes. Root plugin.json is portable; .codex-plugin/plugin.json is a compatibility
+entry. The repo marketplace points to the full package root.
+
+`start` is a foreground `watch` alias. A random per-run monitor token binds a
+cooperative stop.json request; no PID signaling or daemon is used. Stop requests
+are checked during bounded poll/backoff waits and between RPCs. An in-flight RPC
+can delay shutdown until its configured timeout. Cancellation is rechecked after
+the read, before publication/managed actions, and on transport errors; a stop
+already observed prevents new healthy output and new interrupt requests. `check` refuses admission once
+it observes a matching stop request. A new monitor uses a different token, so an
+old request cannot stop it. Stop acceptance is not evidence of process exit.
+SIGTERM and Ctrl-C enter cleanup; normal monitor exit revokes admission before
+releasing the lock. Uncatchable termination may leave a snapshot valid until TTL,
+so an orchestrator must also supervise monitor liveness.
+
+Reports include observation/expiry/report times (Unix seconds), data_valid,
+stale and per-window percentages, durations and reset times. Low quota may be a
+valid fresh observation; unavailable or stale data must never be interpreted as
+current balance. Notifications invalidate and publish a redacted decision without
+recursive RPC calls. Policy changes require stop, confirmed exit, and restart.
