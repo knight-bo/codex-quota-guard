@@ -1,6 +1,8 @@
 # codex-quota-guard
 
-Version 0.2.0 — plugin entry, explicit polling lifecycle and quota reporting.
+Version 0.3.0 — nine-language guides and optional localized human reports.
+
+[English · 简体中文 · Русский · 日本語 · 한국어 · Español · Français · Deutsch · Português](docs/LANGUAGES.md)
 
 Experimental advisory plugin and CLI for conservative Codex quota monitoring.
 Python runtime dependencies are limited to the standard library.
@@ -84,7 +86,9 @@ before returning a response; partial pending frames fail closed. Deadlines apply
 even to buffered messages. Notifications arriving after that boundary remain an
 unavoidable polling race, so a healthy read is not an atomic quota reservation.
 
-Commands emit allowlisted JSON, never server payloads. `read`/`check` exit 0 only
+Commands emit allowlisted JSON by default, never server payloads. Add
+`--format text --locale en` for human reports; supported languages and fallback
+rules are in [Languages](docs/LANGUAGES.md). Machine fields and state stay unchanged. `read`/`check` exit 0 only
 when healthy, otherwise 2; `simulate` exits 0 for a completed replay regardless of
 its quota decisions. Ctrl-C exits 130. Watch retries connection failures with
 bounded exponential jitter (up to 60 seconds). Notifications invalidate cached

@@ -36,3 +36,19 @@ CLI; plugin installation uses the complete repository package and manifests.
 The 0.2.0 review regression covers a stop accepted during an in-flight read:
 healthy, low-quota and transport-error outcomes all exit without a new interrupt
 or healthy report; stopped state and subsequent cached checks deny admission.
+
+## Version 0.3.0 multilingual validation
+
+All 60 offline unittest cases passed, including the original protocol, cancellation,
+cleanup and fail-closed regressions. New tests cover nine complete UTF-8 catalogs,
+explicit locale selection and regional/unsupported fallback, missing translation
+fallback, UTC/numeric presentation, stale/invalid data, unconfirmed checkpoints,
+ASCII-terminal escaping, unchanged machine JSON and persisted policy, identical
+read exit codes, localized runtime failures and stop-request wording.
+
+Compileall, wheel build and installation into an isolated virtual environment
+passed. Rendering from outside the source tree verified that the installed wheel
+contains and loads all nine locale catalogs. Relative links in the multilingual
+entry and guides resolve. Tests use synthetic data, not personal quota readings.
+This release has not undergone a new live authenticated/client-UI integration test.
+Translations received an editorial pass; they are not certified translations.

@@ -106,3 +106,19 @@ cannot stop arbitrary hosted cloud tasks. RPC acknowledgement is not confirmed
 completion. Checkpoint requests are advisory: checkpoint_status remains
 unconfirmed. Do not claim work was saved or all workers stopped without separate
 verified evidence from the owning orchestrator.
+
+
+## Languages and human reports
+
+Use the user's requested language; supported bundled guides and human reports are
+English (en), Simplified Chinese (zh), Russian (ru), Japanese (ja), Korean (ko),
+Spanish (es), French (fr), German (de), and Portuguese (pt). Natural-language quota
+questions in any of these languages still mean one read, never implicit monitoring.
+Read `../../docs/LANGUAGES.md` relative to this skill directory for the guide index.
+For machine interpretation keep default JSON; never translate JSON fields, reason
+codes, state files or protocol parameters. If a human CLI report is wanted, add
+`--format text --locale LANGUAGE`. Regional forms use the base language; unsupported
+locales fall back to English. This does not change thresholds or permissions.
+Describe invalid/stale values as unavailable/historical in every language and retain
+all start/stop, approval, interruption and unconfirmed-checkpoint boundaries above.
+Language support is not a claim of service availability in every country.

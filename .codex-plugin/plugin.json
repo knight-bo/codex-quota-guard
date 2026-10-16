@@ -1,6 +1,6 @@
 {
   "name": "codex-quota-guard",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Read Codex quota and run opt-in advisory monitoring with fail-closed checks.",
   "author": {
     "name": "knight-bo"

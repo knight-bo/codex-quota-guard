@@ -46,3 +46,8 @@ Read quota only through the existing official app-server route. Never parse
 credentials or session logs directly, change CODEX_HOME, or relax permissions
 and security settings to bypass a startup failure. Use normal host approval for
 a legitimate operation when needed, and honor denial.
+
+Localization is presentation-only. Locale identifiers select from a fixed list,
+not arbitrary filesystem paths. Human reports never display raw server messages,
+exception strings or prompts. Machine reason codes, state and permission behavior
+are not translated. Language support does not bypass eligibility or regional policy.

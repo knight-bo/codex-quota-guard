@@ -10,6 +10,7 @@ from pathlib import Path
 from .core import Guard, Policy, number
 from .rpc import RPC
 from .state import ManagedStop, State
+from .i18n import emit
 
 
 class MonitorStopped(Exception):
@@ -30,7 +31,11 @@ def main(argv=None):
     p.add_argument('--managed-thread')
     p.add_argument('--managed-turn')
     p.add_argument('--allow-interrupt', action='store_true')
+    p.add_argument('--format', choices=['json', 'text'], default='json', help='JSON is stable machine output; text is a localized human report')
+    p.add_argument('--locale', default='en', help='Text language: en, zh, ru, ja, ko, es, fr, de, pt; unsupported values fall back to en')
     a = p.parse_args(argv)
+    def output(report, stream=None):
+        emit(report, a.format, a.locale, stream)
     if a.mode == 'start':
         a.mode = 'watch'
     if a.mode != 'stop' and not a.bucket:
@@ -41,9 +46,9 @@ def main(argv=None):
         if a.mode == 'stop':
             state = State(a.state_dir, readonly=True)
             requested = state.request_stop()
-            print(json.dumps({'stop_requested': requested,
+            output({'stop_requested': requested,
                 'reason': 'stop_requested' if requested else 'no_active_monitor',
-                'allow_new_work': False}))
+                'allow_new_work': False})
             return 0 if requested else 2
         if a.mode == 'watch' and threading.current_thread() is threading.main_thread():
             def terminate(signum, frame):
@@ -74,7 +79,7 @@ def main(argv=None):
             out = dict(d, allow_new_work=ok, reported_at=now,
                        stale=not fresh, data_valid=bool(fresh and trusted and d.get('data_valid', True)),
                        reason=d.get('reason', 'healthy') if fresh and trusted else 'unavailable')
-            print(json.dumps(out))
+            output(out)
             return 0 if ok else 2
         state = State(a.state_dir)
         state.data['policy'] = vars(policy)
@@ -106,7 +111,7 @@ def main(argv=None):
                 out['managed_action'] = stopper.stop(rpc) if a.allow_interrupt and rpc else 'would_interrupt'
                 out['checkpoint_status'] = 'unconfirmed'
             ensure_running()
-            print(json.dumps(out), flush=True)
+            output(out)
             return d
 
         if a.mode == 'simulate':
@@ -150,7 +155,7 @@ def main(argv=None):
             decision = guard.decision()
             state.save(decision)
             # No recursive interrupt RPC from within the transport callback.
-            print(json.dumps(decision), flush=True)
+            output(decision)
 
         attempt = 0
         while True:
@@ -183,7 +188,7 @@ def main(argv=None):
                 attempt += 1
                 wait(random.uniform(0.5, 1)*min(60, 2**min(attempt, 6)))
     except MonitorStopped:
-        print('{"allow_new_work":false,"reason":"monitor_stopped","data_valid":false}', flush=True)
+        output({'allow_new_work': False, 'reason': 'monitor_stopped', 'data_valid': False})
         return 0
     except KeyboardInterrupt:
         return 130
@@ -194,7 +199,7 @@ def main(argv=None):
                 state.save({'allow_new_work': False, 'reason': 'error', 'valid_until': None})
             except Exception:
                 pass
-        print('{"allow_new_work":false,"reason":"configuration_or_io_error"}', file=sys.stderr)
+        output({'allow_new_work': False, 'reason': 'configuration_or_io_error'}, sys.stderr)
         return 2
     finally:
         cleanup_failed = False
@@ -222,7 +227,7 @@ def main(argv=None):
         if old_term is not None:
             signal.signal(signal.SIGTERM, old_term)
         if cleanup_failed:
-            print('{"allow_new_work":false,"reason":"cleanup_or_state_error"}', file=sys.stderr)
+            output({'allow_new_work': False, 'reason': 'cleanup_or_state_error'}, sys.stderr)
             return 2
 
 

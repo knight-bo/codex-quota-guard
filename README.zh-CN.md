@@ -1,7 +1,10 @@
 # codex-quota-guard
 
-版本 0.2.0。实验性的建议型 Codex 额度查询与监控插件，运行时只依赖 Python 标准库，
+版本 0.3.0。实验性的建议型 Codex 额度查询与监控插件，运行时只依赖 Python 标准库，
 非 OpenAI 官方产品。[安装指南](docs/PLUGIN-INSTALL.zh-CN.md) · [English](README.md)
+
+[九语言安装与使用入口](docs/LANGUAGES.md)。人类可读报告使用 `--format text --locale zh`；
+默认 JSON、协议字段、状态文件和退出码保持不变。语言支持不代表所有地区均可使用。
 
 ## 能做什么
 

@@ -81,3 +81,12 @@ stale and per-window percentages, durations and reset times. Low quota may be a
 valid fresh observation; unavailable or stale data must never be interpreted as
 current balance. Notifications invalidate and publish a redacted decision without
 recursive RPC calls. Policy changes require stop, confirmed exit, and restart.
+
+## Version 0.3.0 presentation layer
+
+`--format json` remains the default machine interface. `--format text --locale xx`
+uses i18n.py and packaged UTF-8 catalogs to render only allowlisted report fields.
+Locale selection never enters the policy, state file, or app-server request.
+Unsupported locales use English; regional identifiers use their base language.
+Missing translated keys fall back to the English catalog. Times use UTC and
+numbers keep their values. See LANGUAGES.md for supported languages and limits.
