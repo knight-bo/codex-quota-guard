@@ -40,5 +40,8 @@
   "would_interrupt": "Se solicitaría una interrupción (no enviada)",
   "pending_unknown": "Resultado de la interrupción desconocido; sin reintento automático",
   "interrupt_acknowledged": "Se ha confirmado la recepción de la solicitud de interrupción; la finalización de la tarea no está confirmada",
-  "advisory": "Solo orientativo: no garantiza una reserva de cuota ni el control de tareas arbitrarias en la nube. Los valores no válidos o desactualizados no representan un saldo actual."
+  "advisory": "Solo orientativo: no garantiza una reserva de cuota ni el control de tareas arbitrarias en la nube. Los valores no válidos o desactualizados no representan un saldo actual.",
+  "confirmation_target_reached": "Se alcanzó el objetivo; no se permite trabajo nuevo, pero no se ha confirmado la pausa de la tarea.",
+  "confirmation_events": "Eventos pendientes del anfitrión (no prueban que se haya avisado al usuario)",
+  "confirmation_target": "Objetivo de la tarea (% restante)"
 }

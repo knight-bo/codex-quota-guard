@@ -1,6 +1,6 @@
 # codex-quota-guard
 
-版本 0.3.0。实验性的建议型 Codex 额度查询与监控插件，运行时只依赖 Python 标准库，
+版本 0.4.0。实验性的建议型 Codex 额度查询与监控插件，运行时只依赖 Python 标准库，
 非 OpenAI 官方产品。[安装指南](docs/PLUGIN-INSTALL.zh-CN.md) · [English](README.md)
 
 [九语言安装与使用入口](docs/LANGUAGES.md)。人类可读报告使用 `--format text --locale zh`；
@@ -9,7 +9,8 @@
 ## 能做什么
 
 - “查看 Codex 剩余额度”：单次读取，不启动监控
-- “启动监控，保留 10%，缓冲 2 个百分点，每 30 秒检查”：启动显式前台轮询
+- “监控这项任务，剩余额度到 80% 时先问我是否暂停”：绑定已核实任务并输出确认事件
+- “启动监控，保留 10%，缓冲 2 个百分点，每 30 秒检查”：使用独立的旧版准入模式
 - “查看缓存状态”：显示观测时间、过期状态和各适用额度窗口
 - “停止额度监控”：协作请求停止，并检查原进程退出
 
@@ -45,6 +46,52 @@ python3 scripts/quota_guard.py simulate --bucket demo --fixture fixtures/demo.js
 STATE 为所选私有绝对路径。模拟数据完全合成；任何 synthetic 快照都不能允许真实
 工作。simulate 的成功退出只代表回放完成。真实 read/check 通过时退出 0，否则 2。
 
-MIT 许可证，见 [LICENSE](LICENSE)。Copyright (c) 2026 knight-bo。GitHub 源码发布与公共插件目录上架是不同步骤。
+MIT 许可证，见 [LICENSE](LICENSE)。Copyright (c) 2026 knight-bo。仅通过 GitHub 下载分发，保持桌面端限定；安装不会启动监控或研究任务。
 [架构说明](docs/ARCHITECTURE.md) · [验证记录](docs/VALIDATION.md) ·
 [安全说明](docs/SECURITY.md)
+
+## 任意剩余额度目标与确认
+
+用户可以用自然语言选择 0–100 范围内任意有限数值，例如“剩余到 80% 时先问我是否暂停此项任务”。
+80 就是实际目标，不限于固定档位，也不是已用 80%。核实具体任务的稳定身份后，可运行：
+
+```sh
+python3 scripts/quota_guard.py start --bucket codex --target 80 --warn-margin 2 --confirm-margin 1 --task-key VERIFIED_STABLE_TASK_KEY --interval 30 --max-age 90 --state-dir STATE
+```
+
+STATE 须替换为可信私有绝对路径；任务键必须来自已核实的任务上下文，不能猜测。
+输出和持久状态只保留任务键的哈希绑定，不输出原始任务 ID。CLI 默认 JSON 供宿主 AI 解读，
+只发出带版本的事件，不负责确认用户收到消息、获得同意或暂停任务。
+
+- 剩余不超过 82%：预警
+- 剩余不超过 81%：confirmation_required；宿主问“到80%时暂停此项任务吗？”
+- 剩余不超过 80%：target_reached，仍不能凭此自动执行暂停
+- 首次有效读取就已经不超过 80%：立即发出确认与到达事件，改问“当前已到或低于80%，现在暂停此项任务吗？”，不能再问未来是否到达
+
+两个 margin 都是百分点，须为 0–100 的有限非负数，warn-margin >= confirm-margin；
+目标加 margin 超过 100 时，实际触发线封顶 100。目标模式拒绝 --allow-interrupt。
+用户批准必须对应这个已核实的具体任务、目标值和可访问的受支持控制方式。
+事件不证明用户已看到、同意，或任务已暂停，也不提供任意云任务控制能力。
+
+宿主必须在受监督的后台会话保持监控进程，同时继续接收用户消息。如果无法同时做到，
+应说明持续监控会阻塞交互，仅提供单次查询，不承诺持续监控。不要为测试而启动研究。
+同一任务/目标的事件去重记录跨重启保留；额度上涨或重置不自动恢复任务。
+改变目标或其他监控配置需要新的明确监控约定，先停止并核实旧进程退出，再重启。
+用户取消时停止监控，并核实退出。
+
+旧版 reserve/buffer 准入与目标确认是独立机制：例如 reserve=80、buffer=0 在剩余
+不超过 80% 时拒绝协作式新工作；buffer=2 则在 82% 触发。两种模式都不能保证恰好
+在目标余额停止消耗。详见[确认工作流](docs/CONFIRMATION-WORKFLOW.md)和
+[受管中断范围](docs/MANAGED-INTERRUPT.md)。
+
+达到目标后还会锁定拒绝协作式新工作（allow_new_work=false、confirmation_target_reached），
+跨额度回升和重启保留；这不证明任务已暂停。只有用户明确要求新一轮监控且旧进程已退出时，
+才使用 --new-cycle 清理事件记录与准入锁定；它不代表批准或恢复任务，首次启动无需此参数。
+
+支持 37.5 等小数目标；100% 目标在剩余 100% 时也可能立即询问，0% 目标不能防止额度耗尽。
+目标参数支持 read/start/watch/check，不支持 CLI simulate。目标模式 check 须使用相同任务键、
+目标和 margins；它返回 events=[]，宿主应结合缓存阶段和真实对话恢复待答问题，不能将事件去重当作送达保证。
+
+
+目标模式直接按用户选择的剩余百分比决定准入，buffer固定为0，提醒/确认提前量不改变
+到线值；不可与旧reserve/threshold/buffer参数混用。旧10%默认不会覆盖用户选的比例。

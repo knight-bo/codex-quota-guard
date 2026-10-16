@@ -90,3 +90,21 @@ Locale selection never enters the policy, state file, or app-server request.
 Unsupported locales use English; regional identifiers use their base language.
 Missing translated keys fall back to the English catalog. Times use UTC and
 numbers keep their values. See LANGUAGES.md for supported languages and limits.
+
+
+## Version 0.4.0 confirmation events
+
+confirmation.py is a presentation/admission state machine, not a messaging or
+control adapter. A required task key is hashed; only that binding enters persisted
+state/output. The arbitrary finite target, warning margin and confirmation margin
+are validated. Target mode uses target/buffer=0 for admission and rejects mixed
+legacy reserve/buffer flags. It cannot enable the managed interrupt route.
+
+Each event has schema version 1 and a cycle/sequence identifier. Warning and
+confirmation are emitted at most once per task/target cycle; target reach latches
+admission closed. Persistence precedes output, so a crash can lose delivery but
+cannot authorize a task action. A host recovers pending interaction from cached
+confirmation stage plus its conversation evidence. Cached checks never re-emit
+an event or prove it was delivered. Neither quota resets nor margin changes clear
+the latch. --new-cycle explicitly resets event bookkeeping, never task consent
+or task state. See CONFIRMATION-WORKFLOW.md for the host's required responsibilities.

@@ -40,5 +40,8 @@
   "would_interrupt": "Would request an interrupt (not sent)",
   "pending_unknown": "Interrupt outcome unknown; no automatic retry",
   "interrupt_acknowledged": "Interrupt request acknowledged; task completion is not confirmed",
-  "advisory": "Advisory only: no guaranteed quota reserve or control over arbitrary cloud tasks. Invalid or stale values are not a current balance."
+  "advisory": "Advisory only: no guaranteed quota reserve or control over arbitrary cloud tasks. Invalid or stale values are not a current balance.",
+  "confirmation_target_reached": "Task target reached; new work blocked, but task pause is not confirmed.",
+  "confirmation_events": "Pending host events (not proof the user was notified)",
+  "confirmation_target": "Task target (remaining %)"
 }

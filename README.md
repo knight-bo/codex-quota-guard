@@ -1,6 +1,6 @@
 # codex-quota-guard
 
-Version 0.3.0 — nine-language guides and optional localized human reports.
+Version 0.4.0 — task-scoped confirmation events and arbitrary remaining-quota targets.
 
 [English · 简体中文 · Русский · 日本語 · 한국어 · Español · Français · Deutsch · Português](docs/LANGUAGES.md)
 
@@ -18,11 +18,12 @@ percentage reserve while other clients consume quota.
 See the [Chinese installation guide](docs/PLUGIN-INSTALL.zh-CN.md). The package
 includes a portable `plugin.json`, a compatibility manifest and a repository-local
 marketplace catalog. Skills run the bundled `scripts/quota_guard.py` with Python;
-no pip install is needed for the plugin. GitHub distribution is separate from
-public plugin-directory approval. Installing the plugin does not start monitoring.
+no pip install is needed for the plugin. Distribution is by GitHub download only. The plugin remains desktop-only.
+Installing the plugin does not start monitoring or research.
 
-Examples: “查看 Codex 剩余额度”, “启动监控，保留 10%，缓冲 2 个百分点，每 30 秒检查”,
-and “停止额度监控”. A one-shot request never starts a polling process.
+Examples: “查看 Codex 剩余额度”, “监控这项任务，剩余额度到 80% 时先问我是否暂停”,
+and “停止额度监控”. Targets are arbitrary finite values from 0 to 100, not presets.
+A one-shot request never starts a polling process.
 
 ## CLI install and test
 
@@ -107,8 +108,11 @@ an atomic reservation: another client can spend quota immediately afterward.
 
 ## Monitoring lifecycle and status
 
-`start` is an alias for `watch`, not a background daemon. Keep its foreground
-process/session supervised. Stop that monitor cooperatively with
+`start` is an alias for `watch`, not a background daemon. The host must run its
+foreground process in a supervised background session while remaining available
+to receive the user’s replies. If the host cannot keep both the process and
+conversation active, explain that continuous monitoring would block interaction
+and offer a one-shot read only; do not promise continuous monitoring. Stop that monitor cooperatively with
 `codex-quota-guard stop --state-dir YOUR_PRIVATE_STATE_DIR`, using
 the same directory. A stop request is not proof the process has exited: observe
 its session and final status. Ctrl-C is also supported. No login hooks, scheduled
@@ -161,3 +165,74 @@ the guard's own transport child is cleaned up.
 See [security review](docs/SECURITY.md) and [validation](docs/VALIDATION.md).
 Licensed under the [MIT License](LICENSE). Copyright (c) 2026 knight-bo.
 Protocol reference: [official app-server documentation](https://learn.chatgpt.com/docs/app-server).
+
+
+## Choose any remaining-quota target
+
+“Ask me before pausing this task at 80% remaining” selects a real target of 80,
+not a preset or 80% used. Resolve the specific task to a verified stable identity
+before starting target-mode monitoring:
+
+```sh
+codex-quota-guard start --bucket codex --target 80 --warn-margin 2 --confirm-margin 1 \
+  --task-key VERIFIED_STABLE_TASK_KEY --interval 30 --max-age 90 \
+  --state-dir "$HOME/.local/state/codex-quota-guard-target"
+```
+
+The task key is supplied from verified host context, not a guessed name; only its
+hashed binding is persisted or emitted. Do not echo raw task IDs in reports.
+The CLI emits versioned advisory events; the host AI reads the JSON and handles
+user-facing messages. At or below 82% it emits a warning, at or below 81% a
+`confirmation_required` event, and at or below 80% `target_reached`. At 81% the
+host asks “到80%时暂停此项任务吗？” (“Pause this task when it reaches 80%?”).
+If the first valid read is already at or below 80%, confirmation and target-reached
+events are emitted immediately; ask whether to pause now, not at a future crossing.
+Never execute a pause just because either event occurred.
+
+Targets accept any finite 0–100 value. Margins are finite percentage points in
+0–100, with warning margin >= confirmation margin; effective trigger lines are
+capped at 100. A zero margin is allowed. All percentages describe remaining quota.
+Events do not prove a message was delivered, seen or approved, nor that work paused.
+`--allow-interrupt` is rejected with `--target`; events cannot bypass confirmation.
+Any later action requires approval for this specific verified task and target,
+plus an accessible, supported control route. Monitoring alone neither starts
+research nor grants control over arbitrary cloud tasks.
+
+Warning/confirmation deduplication persists for the same target/task across
+restarts. A quota rise or reset never resumes work automatically or renews
+approval. Changing the target or other monitoring configuration requires a new
+explicit monitoring agreement: stop the monitor, verify its process exited, then
+restart. A user cancellation stops the watch; verify exit before reporting success.
+See the [host confirmation workflow](docs/CONFIRMATION-WORKFLOW.md).
+
+## Separate reserve/admission mode
+
+The existing `--reserve` / `--threshold` and `--buffer` controls remain a separate
+cooperative new-work admission policy. Reserve accepts 0–100; buffer is
+nonnegative and reserve + buffer must not exceed 100. For an exact 80% admission
+line use `--reserve 80 --buffer 0`; with buffer 2 it gates at 82% or less. These
+flags do not express target-mode confirmation or grant permission to stop work.
+Neither mode guarantees an exact stopping balance: polling, RPC/retry delays,
+in-flight work and concurrent clients can consume quota after detection.
+See [managed scope](docs/MANAGED-INTERRUPT.md) for the separate opt-in legacy route
+and its unverified live-turn limitations.
+
+Reached targets also latch cooperative admission closed across quota rises and
+restarts (`allow_new_work=false`, `confirmation_target_reached`); this is not proof
+of a paused task. `--new-cycle` clears the event ledger/admission latch only for
+an explicitly requested new cycle after the previous monitor has stopped. It
+does not approve or resume work, and is unnecessary for initial startup.
+
+Decimal targets such as 37.5 are supported. Target 100 can ask immediately even
+at 100% remaining; target 0 offers no protection from exhaustion. Target flags
+work with read/start/watch/check, not CLI simulate. Cached target checks must
+repeat the same task key, target and margins; `events=[]` is normal for check.
+The host recovers pending questions from cached stage plus actual conversation
+history, because persisted at-most-once events do not guarantee user delivery.
+
+
+Target mode (`--target`) uses the exact chosen target as the admission threshold
+with buffer 0; warning/confirmation margins do not move it. Do not combine
+`--target` with `--reserve`, `--threshold`, or `--buffer` (rejected). The legacy
+reserve/buffer mode remains available without `--target`. The prior default of
+10% never replaces a selected task target, including a target below 10%.

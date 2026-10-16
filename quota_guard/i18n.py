@@ -76,6 +76,14 @@ def render(report, locale='en'):
     if 'checkpoint_status' in report:
         # Never render a checkpoint as confirmed, including unexpected values.
         lines.append(label('checkpoint')+': '+label('unconfirmed'))
+    confirmation = report.get('confirmation')
+    if isinstance(confirmation, dict):
+        lines.append(label('confirmation_target')+': '+numeric(confirmation.get('target_percent')))
+        # Event names stay protocol identifiers; no claim of delivery or approval.
+        events = report.get('events', [])
+        kinds = [event.get('type') for event in events if isinstance(event, dict) and
+                 event.get('type') in ('warning', 'confirmation_required', 'target_reached', 'quota_changed')] if isinstance(events, list) else []
+        lines.append(label('confirmation_events')+': '+(', '.join(kinds) if kinds else label('unknown')))
     lines.append(label('advisory'))
     return '\n'.join(lines)
 

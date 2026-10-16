@@ -51,3 +51,13 @@ Localization is presentation-only. Locale identifiers select from a fixed list,
 not arbitrary filesystem paths. Human reports never display raw server messages,
 exception strings or prompts. Machine reason codes, state and permission behavior
 are not translated. Language support does not bypass eligibility or regional policy.
+
+
+Target confirmation mode never calls ManagedStop and rejects --allow-interrupt
+and managed bindings. Every generated event explicitly leaves user notification,
+pause authorization and task-paused status unconfirmed/false. These fields do not
+attempt to reflect external host actions. Hashing a task key is identification,
+not authentication. The host must verify the task, ask the user, remain available
+for replies, and use only an already-authorized supported route. A reached target
+closes admission but is not proof a running task stopped. No automatic resume is
+triggered by quota resets, rises, or an event-ledger reset.

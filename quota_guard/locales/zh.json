@@ -40,5 +40,8 @@
   "would_interrupt": "仅预演：启用后才会请求中断，当前未发送",
   "pending_unknown": "中断结果未知；不会自动重试",
   "interrupt_acknowledged": "中断请求已获受理；尚未确认任务完成",
-  "advisory": "仅供参考：不保证预留额度，也无法控制任意云端任务。无效或过期的数值不代表当前余额。"
+  "advisory": "仅供参考：不保证预留额度，也无法控制任意云端任务。无效或过期的数值不代表当前余额。",
+  "confirmation_target_reached": "已达到任务目标线；拒绝新工作，但尚未确认任务已暂停。",
+  "confirmation_events": "待宿主处理的事件（不代表用户已收到通知）",
+  "confirmation_target": "任务目标（剩余百分比）"
 }

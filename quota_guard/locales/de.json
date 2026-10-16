@@ -40,5 +40,8 @@
   "would_interrupt": "Eine Unterbrechung würde angefordert (nicht gesendet)",
   "pending_unknown": "Ergebnis der Unterbrechung unbekannt; kein automatischer erneuter Versuch",
   "interrupt_acknowledged": "Empfang der Unterbrechungsanforderung bestätigt; Abschluss der Aufgabe nicht bestätigt",
-  "advisory": "Nur als Hinweis: Keine garantierte Kontingentreserve und keine Kontrolle über beliebige Cloud-Aufgaben. Ungültige oder veraltete Werte zeigen keinen aktuellen Restbestand an."
+  "advisory": "Nur als Hinweis: Keine garantierte Kontingentreserve und keine Kontrolle über beliebige Cloud-Aufgaben. Ungültige oder veraltete Werte zeigen keinen aktuellen Restbestand an.",
+  "confirmation_target_reached": "Zielgrenze erreicht; neue Arbeit nicht erlaubt, aber Aufgabenpause nicht bestätigt.",
+  "confirmation_events": "Ausstehende Host-Ereignisse (kein Nachweis einer Benachrichtigung)",
+  "confirmation_target": "Aufgabenziel (verbleibende %)"
 }

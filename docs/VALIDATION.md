@@ -52,3 +52,24 @@ contains and loads all nine locale catalogs. Relative links in the multilingual
 entry and guides resolve. Tests use synthetic data, not personal quota readings.
 This release has not undergone a new live authenticated/client-UI integration test.
 Translations received an editorial pass; they are not certified translations.
+
+
+## Version 0.4.0 task confirmation events
+
+All 78 offline tests passed. Added cases cover arbitrary decimal targets, 0/100
+endpoints, rejected nonfinite/out-of-range targets and invalid margins, 82/81/80
+warning/confirmation/reached events, first reads already below target, skipped
+crossings, no implicit authorization or interruption, persisted deduplication,
+reset/rise latch preservation, explicit new-cycle behavior, hashed task binding,
+cached policy/task mismatch rejection and stop-during-read cancellation.
+Target mode uses exactly the chosen target and buffer 0, rejects mixed legacy
+reserve/buffer flags, and does not substitute the old default for low targets.
+A supervised fake app-server process exercised event streaming and cooperative stop.
+The legacy 5/10/20/30% reserve and exact/default-buffer boundary tests remain.
+
+Tests create no real model task, send no real user notification and pause no user
+task. Events are pending host work, not evidence of delivery, consent or completion.
+Real end-to-end host event handling, interactive confirmation and an authorized
+supported task-control route remain integration checks, not established by tests.
+This release is distributed by GitHub only. Official-directory submission work was
+canceled; no submission ZIP, portal upload or identity verification is part of it.

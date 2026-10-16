@@ -40,5 +40,8 @@
   "would_interrupt": "Une interruption serait demandée (non envoyée)",
   "pending_unknown": "Résultat de l’interruption inconnu ; aucune nouvelle tentative automatique",
   "interrupt_acknowledged": "La réception de la demande d’interruption est confirmée ; la fin de la tâche ne l’est pas",
-  "advisory": "À titre indicatif uniquement : aucune réserve de quota ni aucun contrôle de tâches arbitraires dans le cloud ne sont garantis. Les valeurs invalides ou périmées ne constituent pas un solde actuel."
+  "advisory": "À titre indicatif uniquement : aucune réserve de quota ni aucun contrôle de tâches arbitraires dans le cloud ne sont garantis. Les valeurs invalides ou périmées ne constituent pas un solde actuel.",
+  "confirmation_target_reached": "Le seuil cible est atteint ; aucun nouveau travail n’est autorisé, mais la pause de la tâche n’est pas confirmée.",
+  "confirmation_events": "Événements à traiter par l’hôte (ne prouvent pas que l’utilisateur a été averti)",
+  "confirmation_target": "Cible de la tâche (% restant)"
 }

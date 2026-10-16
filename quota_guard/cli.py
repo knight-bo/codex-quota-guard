@@ -11,6 +11,7 @@ from .core import Guard, Policy, number
 from .rpc import RPC
 from .state import ManagedStop, State
 from .i18n import emit
+from .confirmation import ConfirmationPolicy, ConfirmationEvents
 
 
 class MonitorStopped(Exception):
@@ -21,10 +22,11 @@ def main(argv=None):
     p = argparse.ArgumentParser(description='Conservative Codex quota alerts; POSIX / Python 3.10+')
     p.add_argument('mode', choices=['simulate', 'read', 'watch', 'start', 'stop', 'check'])
     p.add_argument('--bucket', help='Explicit metered limitId; no automatic bucket choice')
-    p.add_argument('--threshold', '--reserve', dest='threshold', type=float, default=10)
-    p.add_argument('--buffer', type=float, default=2, help='Percentage points added to threshold')
+    p.add_argument('--threshold', '--reserve', dest='threshold', type=float, default=None,
+                   help='Remaining quota percent, 0..100; reserve + buffer must be <=100 (default: 10)')
+    p.add_argument('--buffer', type=float, default=None, help='Percentage points added to reserve (default: 2); use 0 for the exact detection line')
     p.add_argument('--max-age', type=float, default=90)
-    p.add_argument('--interval', type=float, default=30)
+    p.add_argument('--interval', type=float, default=30, help='Requested polling interval in seconds (default: 30), not a hard reservation guarantee')
     p.add_argument('--timeout', type=float, default=10)
     p.add_argument('--state-dir', default=str(Path.home()/'.local/state/codex-quota-guard'))
     p.add_argument('--fixture')
@@ -33,7 +35,15 @@ def main(argv=None):
     p.add_argument('--allow-interrupt', action='store_true')
     p.add_argument('--format', choices=['json', 'text'], default='json', help='JSON is stable machine output; text is a localized human report')
     p.add_argument('--locale', default='en', help='Text language: en, zh, ru, ja, ko, es, fr, de, pt; unsupported values fall back to en')
+    p.add_argument('--target', type=float, help='Task confirmation target: remaining percent, any finite value from 0 to 100')
+    p.add_argument('--warn-margin', type=float, default=2, help='Warn this many percentage points above target (default: 2)')
+    p.add_argument('--confirm-margin', type=float, default=1, help='Ask this many percentage points above target (default: 1)')
+    p.add_argument('--task-key', help='Verified task identity for confirmation events; only its hash is stored')
+    p.add_argument('--new-cycle', action='store_true', help='Explicitly reset confirmation-event ledger; never authorizes task resume')
     a = p.parse_args(argv)
+    mixed_target_policy = a.target is not None and (a.threshold is not None or a.buffer is not None)
+    a.threshold = 10 if a.threshold is None else a.threshold
+    a.buffer = 2 if a.buffer is None else a.buffer
     def output(report, stream=None):
         emit(report, a.format, a.locale, stream)
     if a.mode == 'start':
@@ -41,8 +51,20 @@ def main(argv=None):
     if a.mode != 'stop' and not a.bucket:
         p.error('--bucket is required except for stop')
     state = rpc = None
+    confirmer = None
     old_term = None
     try:
+        confirmation_policy = None
+        if a.target is not None:
+            if mixed_target_policy:
+                raise ValueError('target_cannot_mix_with_reserve_or_buffer')
+            confirmation_policy = ConfirmationPolicy(a.target, a.warn_margin, a.confirm_margin)
+            if not a.task_key or a.allow_interrupt or a.managed_thread or a.managed_turn or a.mode == 'simulate':
+                raise ValueError('confirmation_requires_task_and_no_managed_interrupt')
+        elif a.task_key or a.new_cycle or a.warn_margin != 2 or a.confirm_margin != 1:
+            raise ValueError('confirmation_target_required')
+        if a.new_cycle and a.mode not in ('read', 'watch'):
+            raise ValueError('new_cycle_requires_explicit_start_or_read')
         if a.mode == 'stop':
             state = State(a.state_dir, readonly=True)
             requested = state.request_stop()
@@ -54,7 +76,10 @@ def main(argv=None):
             def terminate(signum, frame):
                 raise KeyboardInterrupt()
             old_term = signal.signal(signal.SIGTERM, terminate)
-        policy = Policy(a.bucket, a.threshold, a.buffer, a.max_age)
+        # Target mode is exact admission at the user's chosen remaining percent.
+        # Warning/confirmation margins never move that admission line.
+        policy = Policy(a.bucket, a.target if confirmation_policy else a.threshold,
+                        0 if confirmation_policy else a.buffer, a.max_age)
         if not all(number(v) and v > 0 for v in (a.interval, a.timeout)):
             raise ValueError('invalid_timing')
         if bool(a.managed_thread) != bool(a.managed_turn):
@@ -66,19 +91,32 @@ def main(argv=None):
             state = State(a.state_dir, readonly=True)
             d = state.data.get('decision', {})
             now = time.time()
+            confirmation_match = True
+            if 'confirmation' in d:
+                import hashlib
+                saved = d['confirmation']
+                confirmation_match = (confirmation_policy is not None and
+                    saved.get('task_binding') == hashlib.sha256(a.task_key.encode()).hexdigest() and
+                    saved.get('target_percent') == a.target and
+                    saved.get('warn_margin') == a.warn_margin and
+                    saved.get('confirm_margin') == a.confirm_margin)
+            elif confirmation_policy is not None:
+                confirmation_match = False
             stop_pending = bool(state.data.get('monitor_token')) and state.stop_requested(state.data['monitor_token'])
-            ok = (not stop_pending and state.data.get('provenance') == 'live' and
+            ok = (confirmation_match and not stop_pending and state.data.get('provenance') == 'live' and
                   state.data.get('policy') == vars(policy) and
                   d.get('allow_new_work') is True and d.get('data_valid', True) is True and
                   number(d.get('observed_at')) and number(d.get('valid_until')) and
                   d['observed_at'] <= now < d['valid_until'])
             fresh = (number(d.get('observed_at')) and number(d.get('valid_until')) and
                      d['observed_at'] <= now < d['valid_until'])
-            trusted = (not stop_pending and state.data.get('provenance') == 'live' and
+            trusted = (confirmation_match and not stop_pending and state.data.get('provenance') == 'live' and
                        state.data.get('policy') == vars(policy))
             out = dict(d, allow_new_work=ok, reported_at=now,
                        stale=not fresh, data_valid=bool(fresh and trusted and d.get('data_valid', True)),
                        reason=d.get('reason', 'healthy') if fresh and trusted else 'unavailable')
+            if 'events' in out:
+                out['events'] = []  # Cached check never re-emits event delivery.
             output(out)
             return 0 if ok else 2
         state = State(a.state_dir)
@@ -87,6 +125,8 @@ def main(argv=None):
         token = uuid.uuid4().hex if a.mode == 'watch' else None
         state.data['monitor_token'] = token
         guard = Guard(policy)
+        if confirmation_policy is not None:
+            confirmer = ConfirmationEvents(state, confirmation_policy, a.task_key, a.new_cycle)
         state.save(guard.decision())  # Revoke prior cached permission before handshake.
         stopper = ManagedStop(state, a.managed_thread, a.managed_turn, a.allow_interrupt) if a.managed_thread else None
 
@@ -100,6 +140,8 @@ def main(argv=None):
         def publish(now=None):
             ensure_running()
             d = guard.decision(now)
+            if confirmer:
+                d = confirmer.evaluate(d)
             if a.mode == 'simulate':
                 d = dict(d, simulated_allow_new_work=d['allow_new_work'],
                          simulated_reason=d['reason'], allow_new_work=False,
@@ -153,6 +195,8 @@ def main(argv=None):
         def updated():
             guard.invalidate('notification_requires_read')
             decision = guard.decision()
+            if confirmer:
+                decision = confirmer.evaluate(decision)
             state.save(decision)
             # No recursive interrupt RPC from within the transport callback.
             output(decision)

@@ -40,5 +40,8 @@
   "would_interrupt": "Seria solicitada uma interrupção (não enviada)",
   "pending_unknown": "Resultado da interrupção desconhecido; sem nova tentativa automática",
   "interrupt_acknowledged": "A receção do pedido de interrupção foi confirmada; a conclusão da tarefa não está confirmada",
-  "advisory": "Apenas indicativo: não garante uma reserva de quota nem o controlo de tarefas arbitrárias na nuvem. Valores inválidos ou desatualizados não representam um saldo atual."
+  "advisory": "Apenas indicativo: não garante uma reserva de quota nem o controlo de tarefas arbitrárias na nuvem. Valores inválidos ou desatualizados não representam um saldo atual.",
+  "confirmation_target_reached": "O limiar alvo foi atingido; não é permitido novo trabalho, mas a pausa da tarefa não está confirmada.",
+  "confirmation_events": "Eventos pendentes para a aplicação (não comprovam a notificação do utilizador)",
+  "confirmation_target": "Objetivo da tarefa (% restante)"
 }
