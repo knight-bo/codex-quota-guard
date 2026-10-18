@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ModelYard · Tibo Codex Monitor</title>
+    <link>https://tibo.modelyard.dev/</link>
+    <description>Public Codex usage-limit reset, rate-limit and subscription policy events tracked by ModelYard.</description>
+    <language>en</language>
+    <lastBuildDate>Sat, 17 Oct 2026 16:21:13 GMT</lastBuildDate>
+    <atom:link href="https://tibo.modelyard.dev/feed.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Day 13: Codex/Work global reset planned</title>
+      <description>Tibo directly replies to the campaign day marker and plans a global reset by end of day (the source timezone is preserved in the linked original). The verified Codex/Work campaign establishes product context. This is a plan, not completion.
+
+Source text: Landing sometime today by EOD PST
+
+Source: https://x.com/thsottiaux/status/2111492738025959922</description>
+      <link>https://tibo.modelyard.dev/events/124</link>
+      <guid isPermaLink="true">https://tibo.modelyard.dev/events/124</guid>
+      <pubDate>Sat, 17 Oct 2026 16:21:13 GMT</pubDate>
+      <category>Reset Planned</category>
+    </item>
+</channel>
+</rss>

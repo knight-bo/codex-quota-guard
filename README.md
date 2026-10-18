@@ -1,6 +1,6 @@
 # codex-quota-guard
 
-Version 0.4.0 — task-scoped confirmation events and arbitrary remaining-quota targets.
+Version 0.5.0 — optional public reset announcements, separate from personal quota.
 
 [English · 简体中文 · Русский · 日本語 · 한국어 · Español · Français · Deutsch · Português](docs/LANGUAGES.md)
 
@@ -27,7 +27,7 @@ A one-shot request never starts a polling process.
 
 ## CLI install and test
 
-Requires Python 3.10+ and POSIX (Linux/macOS). Live mode additionally requires an
+Requires Python 3.10+ and POSIX (Linux/macOS). Personal-quota live mode additionally requires an
 installed official `codex` CLI with an already configured, eligible account.
 The runtime uses only the Python standard library. Packaging uses setuptools.
 
@@ -236,3 +236,32 @@ with buffer 0; warning/confirmation margins do not move it. Do not combine
 `--target` with `--reserve`, `--threshold`, or `--buffer` (rejected). The legacy
 reserve/buffer mode remains available without `--target`. The prior default of
 10% never replaces a selected task target, including a target below 10%.
+
+## Optional public Tibo reset announcements
+
+`resetwatch` is an independent, opt-in public announcement watch; it needs no
+account or API key. It distinguishes `planned`, `completed`, `banked`, and
+`manual_credit`, retaining original post/source URLs and provider verification
+claims. A public completion announcement never confirms personal quota restoration
+or authorizes resuming/pausing research. It never changes quota/confirmation state.
+
+```sh
+python3 scripts/quota_guard.py resetwatch --help --locale en
+python3 scripts/quota_guard.py resetwatch read --state-dir PUBLIC_STATE
+python3 scripts/quota_guard.py resetwatch start --state-dir PUBLIC_STATE --events completed,banked --interval 3600 --timezone UTC
+python3 scripts/quota_guard.py resetwatch stop --state-dir PUBLIC_STATE
+```
+
+Replace PUBLIC_STATE with a private absolute parent outside the repository/cache.
+First success silently builds a baseline; subsequent post/state events deduplicate
+across restarts. Polling is hourly by default, with persisted cooldown and bounded
+backoff. Failures/stale/invalid sources mean unknown. The host consumes JSON and
+uses its existing local notification adapter; CLI events do not prove delivery.
+Sleep, exit and network/provider delay interrupt monitoring; no real-time guarantee.
+The default reads ModelYard's fixed public RSS; HTML and arbitrary endpoint flags
+were removed. Fetch time is separate from feed publication dates; source coverage
+remains unknown. Same-post classification updates have local observation provenance.
+The supplied real cropped RSS sample is tested; live transport remains blocked here.
+[Full configuration, JSON contract and limitations](docs/RESET-WATCH.md) ·
+[Source inspection/permission limits](docs/RESET-SOURCES.md) ·
+[Nine-language help and plugin guides](docs/LANGUAGES.md).

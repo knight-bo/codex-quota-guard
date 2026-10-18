@@ -108,3 +108,25 @@ confirmation stage plus its conversation evidence. Cached checks never re-emit
 an event or prove it was delivered. Neither quota resets nor margin changes clear
 the latch. --new-cycle explicitly resets event bookkeeping, never task consent
 or task state. See CONFIRMATION-WORKFLOW.md for the host's required responsibilities.
+
+## Version 0.5.0 independent public announcements
+
+reset_cli.py dispatches public read/start/stop/status before quota validation.
+Public state/lock/stop token are isolated in public-reset-watch. The default
+ModelYard provider performs one GET to its fixed public RSS URL, parses RSS2/Atom
+metadata with DTD/entity/nested-field/size/source/date/category guards, and never
+parses HTML or probes API/JSON/X paths. The old HTML candidate was superseded.
+Alternate providers remain injectable Python integrations; arbitrary runtime URL
+configuration is removed. Local JSON fixtures remain network-free.
+
+fetched_at records local retrieval; source coverage is always unknown. The RSS
+has no synchronization heartbeat or update date. Feed lastBuildDate/latest entry
+are event dates, not verification times. Same-post category changes preserve
+original publication, use first_observed_status_at/local-observation provenance,
+and emit only a new aggregator state, never a fabricated original edit time.
+Product scope is taken from supplied original text or marked unknown; provider
+context is separate. ChatGPT-only records do not notify as Codex/Work.
+
+Durable metadata/baseline/dedup/cooldown precede emission. Public failures never
+change quota policy or task state. notifications.py builds nine-language payloads
+for a host-supplied local callback; no platform sender or verified delivery exists.

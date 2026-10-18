@@ -1,4 +1,4 @@
-# 설치 및 사용 안내 · 0.4.0
+# 설치 및 사용 안내 · 0.5.0
 
 Codex Quota Guard는 사용 한도를 조회하고 참고용으로 모니터링합니다. Python 3.10 이상, POSIX 환경(Linux/macOS), 설치된 공식 Codex CLI가 필요합니다. 이용 조건에 맞는 계정으로 일반 인증 절차를 완료해야 합니다. 실행 시에는 Python 표준 라이브러리만 사용합니다. 신뢰할 수 있는 PATH에 있는 공식 실행 파일을 사용하세요.
 
@@ -62,3 +62,32 @@ python3 scripts/quota_guard.py stop --state-dir STATE --format text --locale ko
 접근에 실패하면 일반 승인 또는 로그인 절차를 이용하세요. 권한, 인증 설정, CODEX_HOME을 변경해 제한을 우회하지 마세요. 자격 증명 파일이나 세션 로그를 직접 읽어서 한도를 확인하지 마세요. 모니터링은 한도를 구매하거나 추가 작업 제어 권한을 부여하지 않습니다.
 
 [전체 안내](../../README.md) · [호스트 확인 절차](../CONFIRMATION-WORKFLOW.md) · [지원 언어](../LANGUAGES.md)
+
+
+## 선택적인 Tibo 공개 초기화 공지
+
+“Tibo의 공개 초기화 공지를 매시간 감시해 줘”, “Asia/Shanghai에서 completed와 banked만 알려 줘”, “공개 공지를 한 번 확인해 줘”, “공개 초기화 알림을 중지해 줘”라고 요청할 수 있습니다. 별도 `resetwatch`를 사용합니다. 질문은 한 번의 `read`이며 명시적인 감시 요청에만 시작합니다. 호스트는 포그라운드 프로세스를 감독하고 JSON을 읽어 기존 로컬 알림 어댑터에 연결해야 합니다. 알림 경로가 없다면 텍스트/JSON만 가능하다고 설명해야 합니다. 설치만으로 시작하지 않습니다.
+
+`planned`는 계획이며 완료가 아닙니다. `completed`는 제삼자가 기록한 완료 공지, `banked`는 개인 수령과 수동 사용이 확인되지 않은 저장형 초기화, `manual_credit`는 원문 조건을 확인해야 하는 수동 크레딧 공지입니다. 공개 기록은 개인 한도 회복을 증명하지 않으며 크레딧 사용이나 연구의 자동 재개/일시 중지를 하지 않습니다. 제공자의 “직접 검증” 표기도 제공자의 주장일 뿐 독립 확인이나 공식 API가 아닙니다.
+
+PUBLIC_STATE를 저장소/캐시 밖의 비공개 절대 상위 경로로 바꾸세요. 별도 `PUBLIC_STATE/public-reset-watch`, 잠금과 중지 토큰을 사용하며 한도 상태를 바꾸지 않습니다. 첫 조회 성공은 알림 없이 기준선만 만듭니다. 과거 글, 중복, 재시작, 순서가 뒤바뀐 이전 상태는 다시 알리지 않습니다. planned→completed 갱신은 새 상태만 알릴 수 있습니다. 필터를 바꿔도 과거를 재생하지 않습니다. 설정 변경은 중지와 원래 프로세스 종료 확인 후 재시작하세요. 이 감시의 중지는 연구나 한도 감시를 중지하지 않습니다.
+
+`--events`는 planned,completed,banked,manual_credit를 선택하며 기본은 모두입니다. `--interval`은 3600..86400초, 기본 3600입니다. 대기 시간은 재시작 후에도 유지되고 오류 시 재시도 지연은 최대 24시간입니다. `--max-age`는 캐시된 조회/확인 증거의 최대 경과 시간(기본 172800초, 간격 이상 604800 이하), `--event-age`는 새 게시물의 최대 경과 시간(기본 604800, 범위 3600..2592000)입니다. 전체 `--timeout`은 1..30초(기본 10)이며 소켓 시간 제한이 최대 한 번 더 걸릴 수 있습니다. `--timezone`은 설치된 IANA 이름이며 기본 UTC입니다. 기계용 날짜는 UTC를 유지합니다. `--locale`은 기존 대체 규칙을 따르며 JSON 필드와 값은 번역하지 않습니다.
+
+기본 `--provider modelyard`는 고정 공개 RSS `/feed.xml`만 읽습니다. HTML 어댑터와 임의 `--provider-url`은 제거했으며 출처 교체는 코드 검토가 필요합니다. RSS 분류는 제삼자 보고이며 공식 검증이 아닙니다. `fetched_at`은 로컬 조회 증거이고 lastBuildDate/최신 게시 시각은 동기화 증거가 아닙니다. 오래돼도 정상인 feed는 기준선을 만들 수 있으나 범위는 알 수 없습니다. 제품 범위는 제공된 원문을 따르며 불명확하면 알 수 없음으로 표시합니다. 제목/문맥은 제공자의 주장입니다. ChatGPT만 해당하는 기록은 Codex/Work 알림으로 보내지 않습니다. 같은 글의 분류 변경은 `first_observed_status_at`에 따른 로컬 집계 상태 갱신이며 원문 수정 시각을 만들지 않습니다. Callback은 호스트의 기존 로컬 알림 경로용이며 실제 전달은 미검증입니다. 본 환경의 네트워크/Library 다운로드는 차단됐고 직접 제공된 실제 첫 항목 발췌를 테스트했습니다. Robots는 재배포 허가가 아니며 출처 검토를 참조하세요.
+
+네트워크/HTTP 실패, 오래된 제공자 확인, 잘못된 형식/날짜, 위조 출처는 알 수 없음을 뜻하며 초기화됨/없음을 뜻하지 않고 공지 이벤트도 만들지 않습니다. 조회에 성공해도 새 이벤트가 없다는 것이 초기화가 없다는 증거는 아닙니다. `status`는 캐시이며 새 조회나 실행 증거가 아닙니다. 출력 전에 기록을 저장하므로 충돌 시 알림이 손실될 수 있고 이벤트가 수신을 증명하지 않습니다. 절전, 종료, 네트워크/출처 지연은 감시를 끊습니다. 실시간 보장이나 자동 시작이 없으며 새 계정, 유료 API, 사용자 데이터 업로드, 새 시스템 알림 권한은 필요하지 않습니다.
+
+```sh
+python3 scripts/quota_guard.py resetwatch --help --locale ko
+python3 scripts/quota_guard.py resetwatch read --state-dir PUBLIC_STATE --format text --locale ko
+python3 scripts/quota_guard.py resetwatch start --state-dir PUBLIC_STATE --events completed,banked --interval 3600 --timezone Asia/Shanghai
+python3 scripts/quota_guard.py resetwatch stop --state-dir PUBLIC_STATE --format text --locale ko
+python3 scripts/quota_guard.py resetwatch status --state-dir PUBLIC_STATE --format text --locale ko
+```
+
+공개 감시 자체는 Python/POSIX/네트워크와 설치된 IANA 시간대 데이터만 필요하며 공식 Codex CLI나 계정은 필요하지 않습니다.
+
+`--fixture FILE`은 `read` 전용이며 네트워크/계정을 사용하지 않고 합성 상태를 격리합니다. 오래된 확인 시각은 만료로 표시됩니다.
+
+[계약 / JSON](../RESET-WATCH.md) · [출처 검토](../RESET-SOURCES.md)

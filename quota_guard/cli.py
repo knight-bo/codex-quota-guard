@@ -19,7 +19,12 @@ class MonitorStopped(Exception):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(description='Conservative Codex quota alerts; POSIX / Python 3.10+')
+    args = sys.argv[1:] if argv is None else list(argv)
+    if args and args[0] == 'resetwatch':
+        from .reset_cli import main as reset_main
+        return reset_main(args[1:])
+    p = argparse.ArgumentParser(description='Conservative Codex quota alerts; POSIX / Python 3.10+',
+                                epilog='Optional public announcements: resetwatch --help (no account required).')
     p.add_argument('mode', choices=['simulate', 'read', 'watch', 'start', 'stop', 'check'])
     p.add_argument('--bucket', help='Explicit metered limitId; no automatic bucket choice')
     p.add_argument('--threshold', '--reserve', dest='threshold', type=float, default=None,
@@ -40,7 +45,7 @@ def main(argv=None):
     p.add_argument('--confirm-margin', type=float, default=1, help='Ask this many percentage points above target (default: 1)')
     p.add_argument('--task-key', help='Verified task identity for confirmation events; only its hash is stored')
     p.add_argument('--new-cycle', action='store_true', help='Explicitly reset confirmation-event ledger; never authorizes task resume')
-    a = p.parse_args(argv)
+    a = p.parse_args(args)
     mixed_target_policy = a.target is not None and (a.threshold is not None or a.buffer is not None)
     a.threshold = 10 if a.threshold is None else a.threshold
     a.buffer = 2 if a.buffer is None else a.buffer

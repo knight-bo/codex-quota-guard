@@ -61,3 +61,28 @@ not authentication. The host must verify the task, ask the user, remain availabl
 for replies, and use only an already-authorized supported route. A reached target
 closes admission but is not proof a running task stopped. No automatic resume is
 triggered by quota resets, rises, or an event-ledger reset.
+
+## Optional public-announcement boundary (0.5.0)
+
+Public monitoring is independent of account reads and starts only explicitly.
+Anonymous public HTTPS GETs send no user/account identifiers, request body, cookies
+or authentication; no credentials/session logs are read. X/Twitter destinations
+and redirects are rejected. Public content cannot invoke commands or task control:
+only bounded factual IDs, URLs, dates and enumerated types/claims are retained;
+raw posts, summaries, scripts and instruction text are not consumed or emitted.
+Default network transport only permits the reviewed fixed RSS address. Arbitrary
+network endpoint flags were removed; provider replacement requires code/source
+review. Host/URL allowlists are not a security boundary against malicious same-user
+code/configuration or DNS. Offline JSON remains bounded and handles recursion errors.
+
+A provider may be mistaken, incomplete or dishonest. Original URL/author-path and
+snowflake consistency checks are not independent X authentication. Provider
+verification never becomes an official API claim or personal quota receipt.
+Missing/stale/malformed/unavailable data remain unknown. Public events cannot
+clear quota targets, restore admission, redeem credits, pause or resume work.
+No notification permissions are requested; a host may use its existing local
+adapter. Emission does not establish delivery. Persistence precedes output, so a
+crash can lose an alert. Sleep and process/network/provider failures can leave
+coverage gaps. The parser is tested against the parent-supplied actual cropped RSS item; live
+transport/full-feed success is not claimed in this blocked environment. Robots
+permission is not a redistribution licence; source terms remain a review obligation.

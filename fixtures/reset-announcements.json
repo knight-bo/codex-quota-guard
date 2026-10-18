@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-18T00:00:00Z",
+  "events": [
+    {
+      "post_id": "2111492738025959922",
+      "post_url": "https://x.com/thsottiaux/status/2111492738025959922",
+      "published_at": "2026-10-17T16:21:00Z",
+      "event_type": "planned",
+      "products": ["codex", "chatgpt_work"],
+      "source_url": "https://tibo.modelyard.dev/events/124",
+      "source_verification": "directly_verified"
+    },
+    {
+      "post_id": "2111566005684289735",
+      "post_url": "https://x.com/thsottiaux/status/2111566005684289735",
+      "published_at": "2026-10-17T21:12:00Z",
+      "event_type": "completed",
+      "products": ["codex", "chatgpt_work"],
+      "source_url": "https://codexresets.com/",
+      "source_verification": "unverified"
+    }
+  ]
+}

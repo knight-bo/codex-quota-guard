@@ -1,4 +1,4 @@
-# インストールと使い方 · 0.4.0
+# インストールと使い方 · 0.5.0
 
 Codex Quota Guard は、利用枠の照会と参考情報としての監視を提供します。Python 3.10 以上、POSIX 環境（Linux/macOS）、インストール済みの公式 Codex CLI が必要です。利用条件を満たすアカウントで、通常の認証を完了しておいてください。実行時の依存関係は Python 標準ライブラリのみです。信頼できる PATH 上の公式実行ファイルを使用します。
 
@@ -62,3 +62,32 @@ python3 scripts/quota_guard.py stop --state-dir STATE --format text --locale ja
 接続できない場合は通常の承認・ログイン手順を使用してください。権限、認証、CODEX_HOME の変更による制限回避や、認証情報ファイル・セッションログの直接読み取りは行わないでください。監視は利用枠の購入や新たなタスク操作権限の付与も行いません。
 
 [全体の説明](../../README.md) · [ホストの確認手順](../CONFIRMATION-WORKFLOW.md) · [対応言語](../LANGUAGES.md)
+
+
+## 任意の Tibo 公開リセット告知
+
+「Tibo の公開リセット告知を毎時監視して」「completed と banked だけを Asia/Shanghai で通知して」「公開告知を一度確認して」「公開リセット通知を停止して」と依頼できます。専用の `resetwatch` を使います。質問だけなら一度の `read` とし、明示的な監視依頼で起動します。ホストは前面プロセスを管理し、JSON を読み、既存のローカル通知アダプターにつなぐ必要があります。通知経路がなければテキスト／JSON のみ利用可能と説明してください。インストールだけでは起動しません。
+
+`planned` は計画で完了ではありません。`completed` は第三者が記録した完了告知、`banked` は保存型リセットで個人の受領や手動利用は未確認、`manual_credit` は原文の条件を確認すべき手動クレジットの告知です。公開記録は個人の利用枠回復を証明せず、利用枠の交換や研究の自動再開・停止も行いません。提供者の「直接検証済み」表記もその提供者の主張であり、独立した確認や公式 API ではありません。
+
+PUBLIC_STATE をリポジトリ／キャッシュ外の非公開な絶対親ディレクトリに置き換えます。専用の `PUBLIC_STATE/public-reset-watch`、ロック、停止トークンを使い、利用枠状態を変更しません。最初の取得成功では通知せず基準だけ保存します。過去の投稿、重複、再起動、順序が逆の古い状態は再通知しません。planned→completed の更新では新状態のみ通知可能です。フィルター変更でも過去を再送しません。設定変更は停止と終了確認後に再起動します。この監視の停止は研究や利用枠監視を停止しません。
+
+`--events` は planned,completed,banked,manual_credit を選び、既定は全部です。`--interval` は 3600..86400 秒、既定 3600。待機は再起動をまたいで保存し、失敗時の再試行延期は最大 24 時間です。`--max-age` は取得／確認キャッシュの最大経過時間（既定 172800 秒、間隔以上かつ 604800 以下）、`--event-age` は新投稿の最大経過時間（既定 604800、範囲 3600..2592000）。取得全体の `--timeout` は 1..30 秒（既定 10）で、追加で最大 1 回のソケットタイムアウトが発生し得ます。`--timezone` はインストール済み IANA 名、既定 UTC。機械用日時は UTC のままです。`--locale` は既存の代替言語規則に従い、JSON のフィールドや値を翻訳しません。
+
+既定の `--provider modelyard` は固定の公開 RSS `/feed.xml` だけを読みます。HTML アダプターと任意の `--provider-url` は削除しました。情報源変更にはコードの確認が必要です。RSS 分類は第三者の報告で、公式検証ではありません。`fetched_at` はローカルの取得記録、lastBuildDate／最新公開日時は同期の証拠ではありません。古くても正常な feed は基準を作れますが、網羅性は不明のままです。製品範囲は提示原文から判断し、不明なら不明と表示します。見出しや文脈は提供者の主張です。ChatGPT だけの記録を Codex/Work 通知として送りません。同じ投稿の分類変更は `first_observed_status_at` によるローカル集約状態更新とし、原投稿の編集時刻を作りません。Callback はホストの既存ローカル通知経路用で、実際の配信は未検証です。本環境の通信／Library 取得は遮断され、直接提供された実際の先頭項目の切り出しをテストしました。Robots は転載許可ではありません。情報源確認を参照してください。
+
+通信／HTTP 失敗、提供者確認の期限切れ、形式／日付の不正、情報源リンクの偽装は不明を意味し、リセット済み／なしを意味しません。告知イベントは作成しません。取得成功でも新イベントがなければリセットなしとは断定できません。`status` はキャッシュであり、新取得や稼働の証明ではありません。出力前に台帳を保存するため、障害で通知を失う場合があります。イベント出力は受信確認ではありません。スリープ、終了、通信や情報源の遅延で監視が途切れます。リアルタイム保証や自動起動はなく、新規アカウント、有料 API、ユーザーデータ送信、新たなシステム通知権限は不要です。
+
+```sh
+python3 scripts/quota_guard.py resetwatch --help --locale ja
+python3 scripts/quota_guard.py resetwatch read --state-dir PUBLIC_STATE --format text --locale ja
+python3 scripts/quota_guard.py resetwatch start --state-dir PUBLIC_STATE --events completed,banked --interval 3600 --timezone Asia/Shanghai
+python3 scripts/quota_guard.py resetwatch stop --state-dir PUBLIC_STATE --format text --locale ja
+python3 scripts/quota_guard.py resetwatch status --state-dir PUBLIC_STATE --format text --locale ja
+```
+
+公開監視自体には Python／POSIX／通信と IANA タイムゾーンデータだけが必要で、公式 Codex CLI やアカウントは不要です。
+
+`--fixture FILE` は `read` 専用です。通信やアカウントを使わず合成状態を隔離します。古い確認日時は正しく期限切れと表示します。
+
+[契約 / JSON](../RESET-WATCH.md) · [情報源の確認](../RESET-SOURCES.md)

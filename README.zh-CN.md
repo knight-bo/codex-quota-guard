@@ -1,6 +1,6 @@
 # codex-quota-guard
 
-版本 0.4.0。实验性的建议型 Codex 额度查询与监控插件，运行时只依赖 Python 标准库，
+版本 0.5.0。实验性的建议型 Codex 额度查询与监控插件，运行时只依赖 Python 标准库，
 非 OpenAI 官方产品。[安装指南](docs/PLUGIN-INSTALL.zh-CN.md) · [English](README.md)
 
 [九语言安装与使用入口](docs/LANGUAGES.md)。人类可读报告使用 `--format text --locale zh`；
@@ -95,3 +95,28 @@ STATE 须替换为可信私有绝对路径；任务键必须来自已核实的�
 
 目标模式直接按用户选择的剩余百分比决定准入，buffer固定为0，提醒/确认提前量不改变
 到线值；不可与旧reserve/threshold/buffer参数混用。旧10%默认不会覆盖用户选的比例。
+
+## 可选的 Tibo 公共重置公告提醒
+
+独立的 `resetwatch` 不需要账户、API key 或额外通知权限。可区分 planned（计划）、
+completed（第三方记录的完成公告）、banked（储存型重置额度，收到与兑换未确认）和
+manual_credit（手动补偿公告）。始终保留原帖 URL／ID、发布时间、来源与核验声明。
+公共公告不能证明个人额度到账，也绝不自动恢复、暂停研究或清除额度目标锁。
+
+```sh
+python3 scripts/quota_guard.py resetwatch --help --locale zh
+python3 scripts/quota_guard.py resetwatch read --state-dir PUBLIC_STATE --format text --locale zh
+python3 scripts/quota_guard.py resetwatch start --state-dir PUBLIC_STATE --events completed,banked --interval 3600 --timezone Asia/Shanghai
+python3 scripts/quota_guard.py resetwatch stop --state-dir PUBLIC_STATE --format text --locale zh
+```
+
+将 PUBLIC_STATE 换为仓库／缓存外的私有绝对父目录。公告状态使用独立子目录，不改动
+账户额度监测。首次成功只建立基线，不轰炸历史；去重跨重启保存，planned→completed
+只提醒新状态。默认每小时轮询，冷却和有界退避均持久保存；网络失败、来源过期、格式
+或来源错误只表示未知。宿主须消费 JSON 并调用已有本地通知适配器；事件不代表已送达。
+停止后还须确认原进程退出；休眠、退出、网络和来源延迟会影响监测，不保证实时。
+默认使用固定 ModelYard 公共 RSS，已移除 HTML 和任意地址入口。抓取时间与来源事件日期
+分开，覆盖未知；同帖分类更新标为本地观察。已测提供的真实裁剪样本；本机在线抓取仍受阻。
+robots 不等于版权许可，不能声称来源授权再分发。
+[中文完整用法与插件指引](docs/i18n/zh.md) · [配置与 JSON 约定](docs/RESET-WATCH.md) ·
+[来源核查与发布限制](docs/RESET-SOURCES.md)。

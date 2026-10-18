@@ -73,3 +73,62 @@ Real end-to-end host event handling, interactive confirmation and an authorized
 supported task-control route remain integration checks, not established by tests.
 This release is distributed by GitHub only. Official-directory submission work was
 canceled; no submission ZIP, portal upload or identity verification is part of it.
+
+## Original 0.5.0 HTML candidate 0146949 (superseded, not for release)
+
+All 125 offline unittest cases passed: the original 78 quota/protocol/target tests
+and 47 new public-watch cases. New coverage includes silent baselines (the two
+known October 17 posts), durable original metadata/deduplication, planned-to-
+completed upgrades, new completion posts, old/late/edited posts, reversed state
+ordering, duplicate conflicts, filtered states, provider changes, corrupt/empty/
+oversized state, source/date forgery, stale checks, clock rollback, persisted
+cooldown, bounded backoff/rate limits, failure recovery and strict JSON contracts.
+Mock HTTP tests cover anonymous GETs, rejected redirects/X targets, deadlines,
+size/content-type/encoding limits, 403/429/timeouts and Retry-After. No real account
+or quota is required. Fake-provider subprocesses verify cooperative stop, SIGTERM,
+lock release and independent public/quota state; cleanup failures are redacted.
+
+All nine catalogs have identical keys and format placeholders, valid UTF-8 and
+localized public-watch help, event payloads, errors and configuration text. Tests
+exercise all nine CLI help/text paths, ASCII terminal fallback, regional/unsupported
+fallback, UTC/IANA date display, identical machine JSON and guide coverage.
+Compilation and relative Markdown link checks passed. A no-dependency, no-build-
+isolation wheel build and isolated virtual-environment installation passed;
+installed entry-point/help/catalog smoke checks run outside the source tree.
+
+The actual public-source CLI returned exit 2 / reset_network_error on this
+network, with no baseline, no announcement events, unknown last success and a
+persisted next-poll deadline. It did not query a Codex account or touch research.
+Rendered source pages were browser-inspected; raw provider RSS/JSON and real
+urllib HTML transport/DOM were not validated. Synthetic markup tests are not
+captured production payloads. See RESET-SOURCES.md for this release blocker and
+provider terms/robots review. Real-host notification delivery and the default
+provider's live success path remain unverified. A callback/payload test is not
+proof a user received a notification. Nothing was published as part of validation.
+
+
+## Revised 0.5.0 RSS candidate
+
+The default HTML adapter was removed after a synthetic template counterexample.
+The new parser uses the exact first-item RSS fixture supplied by parent review,
+explicitly cropped and provenance-marked, plus adversarial/synthetic cases.
+The parent five-item Library sample could not be downloaded through this
+environment's proxy (one normal byte-transfer attempt, CONNECT 403). A subsequent
+native Library text read matched the exact 4351-byte SHA256 and passed five-item
+parser compatibility checks. That is not a successful live provider fetch.
+Tests cover namespaces, original author/host/guid, exact/ambiguous/unknown categories,
+missing/multiple/trailing sources, nested/hidden/escaped HTML, DTD/entities, size
+limits and dates. Old valid feeds build baselines without invented heartbeats.
+Same-post upgrades retain publication and first local observation separately;
+ChatGPT-only scope is filtered and unknown scope stays explicit. Deep JSON fails
+as reset_parse_error/backoff and subsequently recovers without a false baseline.
+All nine locales cover fetch/coverage/scope and local status-change provenance.
+The local notification callback is only an integration interface, not a platform
+sender or demonstrated user delivery. Full parent real-feed retest remains separate.
+
+The revised run passed all 131 offline tests (78 retained quota tests plus 53
+public-watch cases), compileall, relative links and diff checks. A new wheel
+build/isolated install passed outside the source tree, including all nine help,
+coverage reports and offline CLI paths plus the real five-item crop. The exact
+4351-byte cropped input was SHA256-verified via native Library text, not fetched
+live by this environment. Full verbose output is included in the review package.

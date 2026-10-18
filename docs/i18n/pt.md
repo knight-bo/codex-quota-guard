@@ -1,4 +1,4 @@
-# Codex Quota Guard 0.4.0: instalação e utilização
+# Codex Quota Guard 0.5.0: instalação e utilização
 
 Requisitos: Python 3.10 ou posterior, um sistema POSIX e a CLI oficial do Codex, autenticada com uma conta elegível para consultar a quota. Utilize o procedimento normal de autorização e início de sessão. Não contorne permissões nem autenticação, não altere `CODEX_HOME` para evitar restrições e não leia diretamente credenciais ou ficheiros de sessão.
 
@@ -61,3 +61,32 @@ O modo antigo `--reserve 10 --buffer 2` mantém-se apenas como opção de compat
 As verificações periódicas podem detetar a passagem pelo limiar com atraso ou saltar a percentagem exata; o atraso dos dados e o consumo de outros clientes impedem garantir uma paragem exatamente no objetivo. Dados em falta, inválidos, sintéticos ou desatualizados não representam um saldo atual nem provam que um limiar tenha sido atingido ou ultrapassado. O plugin não controla tarefas arbitrárias na nuvem. O seu campo `checkpoint_status` permanece sempre `unconfirmed`; apenas o orquestrador responsável verifica de forma independente a gravação e a conclusão. Uma interrupção gerida exige autorização explícita para a conversa e o turno exatos e acessíveis. A confirmação de uma interrupção não confirma a conclusão da tarefa, a gravação de um ponto de recuperação nem a possibilidade de retomar o trabalho. Este mecanismo antigo não permite contornar a confirmação do modo de objetivo; `--target` rejeita `--allow-interrupt`.
 
 Mais informações: [Contrato de confirmação do anfitrião (em inglês)](../CONFIRMATION-WORKFLOW.md) · [README](../../README.md) · [Idiomas](../LANGUAGES.md).
+
+
+## Anúncios públicos opcionais de Tibo
+
+Diga «Vigia os anúncios públicos de reposição do Tibo a cada hora», «Avisa apenas de completed e banked em Asia/Shanghai», «Consulta os anúncios uma vez» ou «Para os avisos públicos». É usado o comando separado `resetwatch`. Uma pergunta significa um único `read`; iniciar exige um pedido explícito de monitorização. O anfitrião deve supervisionar o processo em primeiro plano, ler JSON e usar o adaptador local de notificações existente. Sem esse canal, deve explicar que só há saída de texto/JSON. A instalação não inicia nada.
+
+`planned` é um plano, não uma conclusão; `completed` é um relato de terceiros sobre um anúncio de conclusão; `banked` é uma reposição guardada sem confirmação de receção ou utilização manual; `manual_credit` anuncia crédito manual cujas condições originais devem ser verificadas. Um anúncio não confirma a quota pessoal, não resgata crédito nem retoma/pausa a investigação automaticamente. Mesmo «verificado diretamente» é uma afirmação do fornecedor, não confirmação independente nem API oficial.
+
+Substitua PUBLIC_STATE por um diretório pai absoluto privado fora do repositório/cache. `PUBLIC_STATE/public-reset-watch`, bloqueio e token de paragem são independentes e não alteram o estado da quota. A primeira obtenção bem-sucedida cria uma referência silenciosa. Publicações históricas, duplicados, reinícios e estados antigos fora de ordem não repetem alertas. Uma atualização planned→completed só pode emitir o novo estado. Alterar filtros não repete o histórico. Para mudar definições, pare, confirme o fim do processo e reinicie; não para a investigação nem o monitor de quota.
+
+`--events` seleciona planned,completed,banked,manual_credit (todos por predefinição). `--interval`: 3600..86400 segundos, predefinição 3600. A espera persiste após reinícios; o recuo depois de erros limita-se a 24 horas. `--max-age` limita a idade das provas de obtenção/verificação em cache (172800 segundos, pelo menos o intervalo e no máximo 604800); `--event-age`, a de novas publicações (604800, intervalo 3600..2592000). `--timeout` global: 1..30 segundos (10), com no máximo mais um tempo limite de socket. `--timezone` usa um fuso IANA instalado, UTC por predefinição; as datas máquina ficam UTC. `--locale` mantém as regras de substituição; campos e valores JSON não são traduzidos.
+
+Por predefinição, `--provider modelyard` lê apenas o RSS público fixo `/feed.xml`. HTML e o `--provider-url` arbitrário foram removidos; trocar fonte exige revisão de código. As categorias RSS são relatos de terceiros, não verificação oficial. `fetched_at` é prova local de obtenção; lastBuildDate/última publicação não prova sincronização. Um feed antigo válido pode criar a referência, com cobertura desconhecida. O âmbito segue o texto original fornecido ou fica desconhecido; título/contexto são afirmações do fornecedor. Registos apenas de ChatGPT não são enviados como Codex/Work. Uma mudança de categoria do mesmo post usa `first_observed_status_at` como atualização local do agregador, sem inventar data de edição. O callback usa uma via local existente do anfitrião; entrega real não verificada. Rede/descarga Library bloqueadas aqui; testa-se o primeiro item real recortado fornecido diretamente. Robots não autoriza redistribuição; veja as fontes.
+
+Falha de rede/HTTP, verificação expirada, formato/datas inválidos e fonte forjada significam desconhecido, nunca «reposto» ou «não reposto»; não criam eventos. Uma consulta bem-sucedida sem novos eventos não prova ausência de reposição. `status` é cache, não nova consulta nem prova de execução. O registo é guardado antes da saída: uma falha pode perder a entrega e um evento não prova notificação. Suspensão, saída e atrasos de rede/fonte interrompem a cobertura. Sem garantia de tempo real nem arranque automático; não exige nova conta, API paga, envio de dados pessoais nem nova permissão de notificação do sistema.
+
+```sh
+python3 scripts/quota_guard.py resetwatch --help --locale pt
+python3 scripts/quota_guard.py resetwatch read --state-dir PUBLIC_STATE --format text --locale pt
+python3 scripts/quota_guard.py resetwatch start --state-dir PUBLIC_STATE --events completed,banked --interval 3600 --timezone Asia/Shanghai
+python3 scripts/quota_guard.py resetwatch stop --state-dir PUBLIC_STATE --format text --locale pt
+python3 scripts/quota_guard.py resetwatch status --state-dir PUBLIC_STATE --format text --locale pt
+```
+
+A monitorização pública exige apenas Python/POSIX/rede e dados IANA instalados; não exige a CLI oficial Codex nem uma conta.
+
+`--fixture FILE` serve apenas para `read`, sem rede/conta e com estado sintético isolado; uma data antiga pode ser corretamente marcada como expirada.
+
+[Contrato / JSON](../RESET-WATCH.md) · [Revisão de fontes](../RESET-SOURCES.md)

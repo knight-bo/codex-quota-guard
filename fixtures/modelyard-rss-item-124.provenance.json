@@ -1,0 +1,9 @@
+{
+  "source_url": "https://tibo.modelyard.dev/feed.xml",
+  "reported_capture_at": "2026-10-18T05:13:00Z",
+  "full_feed_reported_size_bytes": 15869,
+  "sample": "Header and first item supplied verbatim by the parent reviewer; closing channel/rss tags added. This is an explicitly cropped fixture, not a complete feed.",
+  "transport": "Parent reviewer reported normal HTTP 200; this development environment still received proxy CONNECT 403.",
+  "independent_post_verification": false,
+  "licence": "No redistribution licence inferred; robots permission is not copyright permission. Only the supplied cropped test sample is retained."
+}

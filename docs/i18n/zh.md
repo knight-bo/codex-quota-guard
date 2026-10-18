@@ -1,4 +1,4 @@
-# 中文安装与使用指南 · 0.4.0
+# 中文安装与使用指南 · 0.5.0
 
 Codex Quota Guard 提供建议性的额度查询和监控。需要 Python 3.10+、POSIX 系统（Linux/macOS），以及已安装、完成正常身份验证且账户符合使用条件的官方 Codex CLI。运行时只依赖 Python 标准库。请使用可信 PATH 中的官方程序。
 
@@ -62,3 +62,32 @@ python3 scripts/quota_guard.py stop --state-dir STATE --format text --locale zh
 访问失败时使用正常审批和登录流程，勿更改权限、认证配置或 CODEX_HOME 来绕过限制，也勿直接读取凭据文件或会话日志。监控不会购买额度，也不授予额外任务控制权限。
 
 更多信息：[主说明](../../README.md) · [宿主确认流程](../CONFIRMATION-WORKFLOW.md) · [语言支持](../LANGUAGES.md)
+
+
+## 可选的 Tibo 公共重置公告
+
+可以说“每小时关注 Tibo 的公开重置公告”“只提醒 completed 和 banked，使用 Asia/Shanghai 时区”“单次查看公共公告”或“停止公共重置提醒”。这些请求使用独立的 `resetwatch`。单纯询问只执行一次 `read`，明确要求持续监测才启动。宿主必须监督前台进程、消费 JSON，并接入已有的本地通知适配器；没有通知通道时，要说明只能提供文本或 JSON 输出。安装不会自动启动监测。
+
+`planned` 是计划，不代表完成；`completed` 是第三方记录的完成公告；`banked` 是可保存的重置额度，个人收到和手动兑换均未经确认；`manual_credit` 是手动补偿公告，必须核对原帖适用条件。任何公共记录都不能证明个人额度到账，不兑换额度，也不自动恢复或暂停研究。来源标注“直接核验”仍是该第三方的声明，不代表独立确认或官方 API。
+
+将 PUBLIC_STATE 替换为仓库／缓存之外的私有绝对父目录。监测单独使用 `PUBLIC_STATE/public-reset-watch`、锁和停止令牌，不修改额度状态。首次成功只建立基线；历史原帖、重复记录、重启和乱序旧状态不重复提醒。planned 后续升级为 completed 时只发新状态。修改类型过滤不会重放历史。改设置时先停止、确认原进程退出，再重启；停止公告监测不停止研究或额度监测。
+
+`--events` 选择 planned,completed,banked,manual_credit，默认全部。`--interval` 为 3600..86400 秒，默认 3600。冷却跨重启持久保存，失败退避最多 24 小时。`--max-age` 限制缓存抓取／检查证据年龄（默认 172800 秒，不低于轮询间隔且不高于 604800）；`--event-age` 限制新原帖年龄（默认 604800，范围 3600..2592000）。`--timeout` 为整个快照共享的 1..30 秒，默认 10，最多额外一次套接字超时。`--timezone` 使用系统已安装的 IANA 时区，默认 UTC；机器日期保持 UTC。`--locale` 沿用原有回退规则，JSON 字段和值不翻译。
+
+默认 `--provider modelyard` 仅读取固定公共 RSS `/feed.xml`。已移除 HTML 适配器和任意 `--provider-url` 路径；替换来源须经过代码集成审核。RSS 分类只是第三方记录，不代表官方核验。`fetched_at` 是本地抓取证据，lastBuildDate／最新发布时间不是来源同步心跳；旧但正常的 feed 可以建立基线，同时覆盖仍标未知。产品范围依据提供的原文，不明确就标未知；标题／上下文只保留为来源声明。只有 ChatGPT 范围的记录不作为 Codex／Work 提醒。同帖分类升级用 `first_observed_status_at` 标为本地观察的聚合状态更新，不伪造原帖修改时间。callback 只接已有宿主本地通知通道，实际送达未经验证。本机网络／Library 下载受阻；已测试直接提供的真实首条裁剪样本。robots 不等于来源授权，详见来源说明。
+
+网络／HTTP 失败、来源检查过期、格式／日期无效、来源链接伪造均表示未知，不表示“已重置”或“未重置”，也不产生公告事件。成功轮询没有新事件，也不能证明没有重置。`status` 只是缓存，不是新读取或进程存活证明。账本先于输出落盘，崩溃可能丢失通知；事件输出不代表用户已收到。休眠、退出、网络和来源延迟会中断覆盖，不保证实时。不配置自动启动，不需新账户、付费 API、用户数据上传或新的系统通知权限。
+
+```sh
+python3 scripts/quota_guard.py resetwatch --help --locale zh
+python3 scripts/quota_guard.py resetwatch read --state-dir PUBLIC_STATE --format text --locale zh
+python3 scripts/quota_guard.py resetwatch start --state-dir PUBLIC_STATE --events completed,banked --interval 3600 --timezone Asia/Shanghai
+python3 scripts/quota_guard.py resetwatch stop --state-dir PUBLIC_STATE --format text --locale zh
+python3 scripts/quota_guard.py resetwatch status --state-dir PUBLIC_STATE --format text --locale zh
+```
+
+公共公告监测本身只需 Python／POSIX／网络和系统 IANA 时区数据，不要求官方 Codex CLI 或账户。
+
+`--fixture FILE` 仅用于 `read`，不访问网络或账户，使用隔离的合成状态；旧检查日期会如实显示过期。
+
+[约定 / JSON](../RESET-WATCH.md) · [来源核查](../RESET-SOURCES.md)

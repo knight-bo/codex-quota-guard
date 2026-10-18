@@ -37,6 +37,8 @@ def catalog(locale):
 
 def render(report, locale='en'):
     words = catalog(select_locale(locale))
+    if report.get('kind') == 'public_reset_watch':
+        return render_reset(report, locale)
     def label(key):
         return words.get(key, words['unknown']) if isinstance(key, str) else words['unknown']
     def boolean(value):
@@ -85,6 +87,39 @@ def render(report, locale='en'):
                  event.get('type') in ('warning', 'confirmation_required', 'target_reached', 'quota_changed')] if isinstance(events, list) else []
         lines.append(label('confirmation_events')+': '+(', '.join(kinds) if kinds else label('unknown')))
     lines.append(label('advisory'))
+    return '\n'.join(lines)
+
+
+def render_reset(report, locale='en'):
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+    from .notifications import notification_payload
+    words = catalog(locale)
+    lines = [words['reset_title'], words.get(report.get('status'), words['unknown'])]
+    prior = report.get('last_poll_status')
+    if isinstance(prior, str) and prior != report.get('status'):
+        lines.append(words['reason'] + ': ' + words.get(prior, words['unknown']))
+    if report.get('cached'):
+        lines.append(words['reset_cached'])
+    if report.get('synthetic'):
+        lines.append(words['reset_synthetic'])
+    zone_name = report.get('timezone', 'UTC')
+    try:
+        zone = ZoneInfo(zone_name)
+    except (ZoneInfoNotFoundError, ValueError, TypeError):
+        zone, zone_name = timezone.utc, 'UTC'
+    for field in ('checked_at', 'last_success_at', 'next_poll_at', 'fetched_at', 'source_latest_published_at'):
+        value = report.get(field)
+        try:
+            shown = datetime.fromtimestamp(value, zone).isoformat(timespec='seconds') if number(value) else words['unknown']
+        except (ValueError, OverflowError, OSError):
+            shown = words['unknown']
+        lines.append(words['reset_' + field] + ': ' + shown)
+    if report.get('source_url'):
+        lines.append(words['reset_source'] + ': ' + report['source_url'])
+    for event in report.get('events', []):
+        lines.append(notification_payload(event, locale, zone_name)['body'])
+    lines.append(words['reset_coverage_unknown'])
+    lines.append(words['reset_advisory'])
     return '\n'.join(lines)
 
 

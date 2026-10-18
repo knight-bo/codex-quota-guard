@@ -1,11 +1,11 @@
 ---
 name: quota-guard
-description: Query Codex remaining quota or explicitly start/stop task-scoped confirmation monitoring at any remaining-quota target; retain separate reserve/buffer admission checks. 用于查询 Codex 剩余额度、查看缓存状态、设置保留额度和缓冲，以及明确启动或停止额度监控。
+description: Watch public Tibo reset announcements independently on explicit request, or query Codex remaining quota or explicitly start/stop task-scoped confirmation monitoring at any remaining-quota target; retain separate reserve/buffer admission checks. 用于查询 Codex 剩余额度、查看缓存状态、设置保留额度和缓冲，以及明确启动或停止额度监控。
 ---
 
 # Codex quota guard
 
-Version 0.4.0. Desktop-only; distributed by GitHub download.
+Version 0.5.0. Desktop-only; distributed by GitHub download.
 
 Use this skill for “查看 Codex 额度”, “还有多少额度”, “保留 10% 额度”,
 “启动/停止额度监控”, “每 30 秒检查”, “check remaining Codex quota”,
@@ -198,3 +198,83 @@ with buffer 0; warning/confirmation margins do not move it. Do not combine
 `--target` with `--reserve`, `--threshold`, or `--buffer` (rejected). The legacy
 reserve/buffer mode remains available without `--target`. The prior default of
 10% never replaces a selected task target, including a target below 10%.
+
+## Separate public Tibo announcement watch (0.5.0)
+
+Also use this skill for explicit public-reset requests in any of the nine supported
+languages, including “每小时提醒 Tibo 重置公告”, “只看 completed 和 banked”, “停止公共
+重置提醒”, “watch Tibo reset announcements”, or equivalent localized requests.
+Read `../../docs/i18n/LOCALE.md` for the user's selected base locale (en fallback),
+including localized examples, configuration and limitations. Read
+`../../docs/RESET-WATCH.md` for the wire contract and
+`../../docs/RESET-SOURCES.md` before claiming provider verification or readiness.
+
+This route needs Python/POSIX/network, but NO authenticated Codex CLI/account.
+The account prerequisites and bucket rules above apply only to personal quota.
+Never read credentials, host session logs or unrelated task state for public news.
+Resolve SCRIPT exactly as above. A public-news question means `resetwatch read`,
+not account `read`, research or continuous watching. An explicit public watch
+request authorizes `resetwatch start` in an observed supervised process session;
+installation alone does not. Never substitute a hosted automation or autostart.
+
+Use a private absolute STATE outside the plugin cache/repository. Runtime isolates
+public monitoring in STATE/public-reset-watch. Record the process session and STATE.
+These commands never call account/rateLimits/read, turn/interrupt or modify the
+quota monitor's state, stop token, confirmation target or reached latch:
+
+- Once: `python3 SCRIPT resetwatch read --state-dir STATE`
+- Start: `python3 SCRIPT resetwatch start --state-dir STATE --events planned,completed,banked,manual_credit --interval 3600 --timezone UTC`
+- Stop: `python3 SCRIPT resetwatch stop --state-dir STATE`
+- Cache: `python3 SCRIPT resetwatch status --state-dir STATE`
+- Localized help: `python3 SCRIPT resetwatch --help --locale LOCALE`
+
+Apply explicit event filters, interval and IANA timezone. Keep JSON for the host;
+text/help use all nine existing locales and the usual fallback. Stop, verify the
+original process has exited and restart to change settings; retain STATE for
+deduplication. Never stop research or quota monitoring when stopping public news.
+A cooperative stop acknowledgement is not process exit. If the host cannot keep
+a supervised process available, explain the limitation and offer a one-shot read;
+do not claim a continuing watch. Sleep, exit, network and provider latency affect
+coverage; no real-time guarantee. Minimum persisted polling interval is one hour.
+
+Inspect the version-1 `events` and source metadata. `planned` is only a plan;
+`completed` is a third-party report of a public completion announcement;
+`banked` means saved reset/card credit with personal receipt and manual redemption
+unknown; `manual_credit` announces manual credit whose scope must be checked in
+the original. Preserve original post URL/ID, publication date, provider source URL
+and provider verification claim. Never re-label `third_party_reported` as official
+API data, independently authenticated evidence or personal quota restoration.
+The default reads only the fixed public RSS. HTML and arbitrary endpoint flags
+were removed. Be candid about docs/RESET-SOURCES.md source/transport limitations.
+RSS has no source heartbeat/update timestamp: provider_checked_at and updated_at
+are null. fetched_at is local retrieval evidence; feed lastBuildDate/latest entry
+is not synchronization. Report source_coverage unknown even after HTTP success.
+Same-post classification upgrades are aggregation_status_update with local
+first_observed_status_at, never a new post or verified edit time. Products are
+from supplied source text or unknown; reported title/context is only a provider
+claim. ChatGPT-only records are not sent as Codex/Work announcements.
+Never bypass a 403/login restriction or scrape X credentials. Do not guess another
+site's JSON schema, infer completion from dates, or ingest forecast probabilities.
+
+First success only establishes a silent historical baseline. New states are
+persistently deduplicated; a planned-to-completed upgrade can notify only the new
+state. Network/HTTP failure, stale provider check time, parse/date/source errors
+and cooldown are not reset/no-reset verdicts. Read `status`, `last_poll_status`,
+`last_success_at`, `provider_checked_at` and `next_poll_at`. `status` is cached,
+never a live source query or proof of liveness. Absence of new events is not proof
+that no reset happened. No failures may fabricate announcement events.
+
+For each genuinely new event, use the host's existing LOCAL notification route,
+keeping source URL and original post link, translated into the user's language.
+`quota_guard.notifications.notification_payload(event, locale, timezone)` builds
+the title/body; `deliver_local(event, host_callback, locale, timezone)` is the
+callback adapter. No OS sender, new permission or external messaging account is
+installed. If the host cannot send a local notification, explain the blocker;
+do not claim delivery. Do not email or post to others. Record actual delivery
+separately. `user_notified` remains false in emitted records; persistence precedes
+emission and a crash may lose delivery. Never treat an event as consent to act.
+
+Every notice must say public news does not establish personal quota receipt and
+does not automatically resume or pause work. A separate explicit personal-quota
+request may use the existing official read path, but a public announcement alone
+must never invoke it, clear a target latch, redeem credit or touch research tasks.

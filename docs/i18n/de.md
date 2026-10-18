@@ -1,4 +1,4 @@
-# Codex Quota Guard 0.4.0: Installation und Nutzung
+# Codex Quota Guard 0.5.0: Installation und Nutzung
 
 Voraussetzungen: Python 3.10 oder neuer, ein POSIX-System und die offizielle Codex-CLI mit einem angemeldeten, zur Kontingentabfrage berechtigten Konto. Verwenden Sie den regulären Genehmigungs- und Anmeldevorgang. Umgehen Sie keine Berechtigungen oder Authentifizierung. Ändern Sie `CODEX_HOME` nicht zur Umgehung von Einschränkungen und lesen Sie keine Zugangsdaten oder Sitzungsdateien direkt aus.
 
@@ -61,3 +61,32 @@ Der bisherige Modus `--reserve 10 --buffer 2` bleibt ausschließlich als Kompati
 Die regelmäßige Abfrage kann eine Schwellenüberschreitung verspätet erkennen oder den exakten Prozentwert verpassen. Verzögerte Daten und Verbrauch durch andere Clients verhindern eine Garantie für einen Stopp genau am Zielwert. Fehlende, ungültige, synthetische oder veraltete Werte zeigen keinen aktuellen Restbestand an und belegen keine erreichte oder überschrittene Schwelle. Bei fehlenden aktuellen Daten sollte keine neue Arbeit aufgrund alter Freigaben gestartet werden. Das Plugin steuert keine beliebigen Cloud-Aufgaben. Sein Feld `checkpoint_status` bleibt immer `unconfirmed`; nur der zuständige Orchestrator prüft Speicherung und Abschluss unabhängig. Eine verwaltete Unterbrechung erfordert eine ausdrückliche Genehmigung für den genauen zugänglichen Thread und Turn. Eine bestätigte Unterbrechung bestätigt weder Aufgabenabschluss noch gespeicherten Checkpoint oder Wiederaufnehmbarkeit. Dieser ältere Mechanismus darf die Bestätigung im Zielmodus nicht umgehen; `--target` weist `--allow-interrupt` zurück.
 
 Weitere Informationen: [Bestätigungsablauf für den ausführenden Assistenten (Englisch)](../CONFIRMATION-WORKFLOW.md) · [README](../../README.md) · [Sprachen](../LANGUAGES.md).
+
+
+## Optionale öffentliche Tibo-Meldungen
+
+Sagen Sie „Überwache Tibos öffentliche Reset-Meldungen stündlich“, „Melde nur completed und banked in Asia/Shanghai“, „Prüfe öffentliche Meldungen einmal“ oder „Stoppe öffentliche Reset-Meldungen“. Dafür dient der getrennte Befehl `resetwatch`. Eine Frage bedeutet einen `read`; Start nur bei ausdrücklichem Überwachungswunsch. Der Host muss den Vordergrundprozess beaufsichtigen, JSON lesen und seinen vorhandenen lokalen Benachrichtigungsadapter nutzen. Fehlt dieser Weg, muss er erklären, dass nur Text/JSON verfügbar ist. Installation startet nichts.
+
+`planned` ist ein Plan, kein Abschluss; `completed` ist ein Drittanbieterbericht über eine Abschlussmeldung; `banked` ist gespeichertes Zurücksetzen ohne bestätigten Erhalt oder manuelle Einlösung; `manual_credit` kündigt manuelle Gutschrift an, deren Originalbedingungen zu prüfen sind. Eine Meldung bestätigt kein persönliches Kontingent, löst nichts ein und setzt Forschung nicht automatisch fort oder pausiert sie. Auch „direkt geprüft“ ist eine Anbieterbehauptung, keine unabhängige Bestätigung oder offizielle API.
+
+Ersetzen Sie PUBLIC_STATE durch ein privates absolutes Elternverzeichnis außerhalb von Repository/Cache. `PUBLIC_STATE/public-reset-watch`, Sperre und Stopptoken sind getrennt und ändern keinen Kontingentzustand. Der erste erfolgreiche Abruf erstellt still einen Anfangsbestand. Historische Beiträge, Duplikate, Neustarts und alte ungeordnete Zustände wiederholen keine Warnungen. Ein Wechsel planned→completed kann nur den neuen Zustand melden. Filterwechsel spielt keine Historie ab. Zum Ändern stoppen, Ende prüfen und neu starten; Forschung und Kontingentmonitor bleiben unberührt.
+
+`--events` wählt planned,completed,banked,manual_credit (Standard alle). `--interval`: 3600..86400 Sekunden, Standard 3600. Wartezeiten überstehen Neustarts; Rückzug nach Fehlern ist auf 24 Stunden begrenzt. `--max-age` begrenzt das Alter gespeicherter Abruf-/Prüfbelege (172800 Sekunden, mindestens Intervall, höchstens 604800); `--event-age` das neuer Beiträge (604800, Bereich 3600..2592000). Gemeinsames `--timeout`: 1..30 Sekunden (10), höchstens ein zusätzliches Socket-Zeitlimit. `--timezone` nutzt eine installierte IANA-Zone, Standard UTC; Maschinendaten bleiben UTC. `--locale` behält die Ausweichregeln bei; JSON-Felder und -Werte werden nicht übersetzt.
+
+Standardmäßig liest `--provider modelyard` nur den festen öffentlichen RSS `/feed.xml`. HTML und beliebige `--provider-url` wurden entfernt; Quellenwechsel erfordert Codeprüfung. RSS-Kategorien sind Drittanbieterberichte, keine offizielle Prüfung. `fetched_at` belegt lokalen Abruf; lastBuildDate/neuste Veröffentlichung ist kein Synchronisierungsbeleg. Ein alter gültiger Feed kann einen Anfangsbestand bilden, bei unbekannter Abdeckung. Produktumfang folgt dem gelieferten Originaltext oder bleibt unbekannt; Titel/Kontext sind Anbieterbehauptungen. Reine ChatGPT-Einträge werden nicht als Codex/Work gemeldet. Ein Kategorienwechsel desselben Beitrags nutzt `first_observed_status_at` als lokal beobachtete Aggregatoränderung, ohne erfundene Bearbeitungszeit. Der Callback nutzt einen vorhandenen lokalen Hostweg; tatsächliche Zustellung ungeprüft. Netzwerk/Library-Download sind hier gesperrt; das direkt gelieferte echte erste ausgeschnittene Element wird getestet. Robots erteilt keine Weiterverbreitungslizenz; siehe Quellenprüfung.
+
+Netzwerk-/HTTP-Fehler, veraltete Anbieterprüfung, ungültige Formate/Daten und gefälschte Quellen bedeuten unbekannt, nie „zurückgesetzt“ oder „nicht zurückgesetzt“; es entsteht kein Ereignis. Ein erfolgreicher Abruf ohne neue Ereignisse beweist keine Abwesenheit eines Resets. `status` ist gespeichert, kein neuer Abruf oder Laufzeitbeleg. Das Register wird vor Ausgabe gespeichert: Abstürze können Zustellung verlieren, und ein Ereignis beweist keine Benachrichtigung. Ruhezustand, Beenden und Netzwerk-/Quellenverzögerungen unterbrechen die Abdeckung. Keine Echtzeitgarantie oder Autostart; kein neues Konto, kostenpflichtige API, Hochladen persönlicher Daten oder neue Systemberechtigung für Benachrichtigungen nötig.
+
+```sh
+python3 scripts/quota_guard.py resetwatch --help --locale de
+python3 scripts/quota_guard.py resetwatch read --state-dir PUBLIC_STATE --format text --locale de
+python3 scripts/quota_guard.py resetwatch start --state-dir PUBLIC_STATE --events completed,banked --interval 3600 --timezone Asia/Shanghai
+python3 scripts/quota_guard.py resetwatch stop --state-dir PUBLIC_STATE --format text --locale de
+python3 scripts/quota_guard.py resetwatch status --state-dir PUBLIC_STATE --format text --locale de
+```
+
+Die öffentliche Überwachung benötigt nur Python/POSIX/Netzwerk und installierte IANA-Zeitzonendaten; offizielle Codex-CLI und Konto sind nicht nötig.
+
+`--fixture FILE` gilt nur für `read`, ohne Netzwerk/Konto und mit isoliertem synthetischem Zustand; ein alter Prüfzeitpunkt wird korrekt als veraltet gemeldet.
+
+[Vertrag / JSON](../RESET-WATCH.md) · [Quellenprüfung](../RESET-SOURCES.md)
